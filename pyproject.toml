@@ -1,0 +1,60 @@
+[tool.poetry]
+name = "avalia-analysis"
+version = "0.1.0"
+description = "este projeto tem coALIA UFPA"
+authors = ["pmano <pmanoella1@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+pandas = "^3.0.1"
+nltk = "^3.9.3"
+spacy = "^3.8.11"
+openpyxl = "^3.1.5"
+gensim = "^4.4.0"
+scikit-learn = "^1.8.0"
+torch = {version = "^2.10.0+cpu", source = "pytorch-cpu"}
+bertopic = "^0.17.4"
+sentence-transformers = "^5.2.3"
+umap-learn = "^0.5.11"
+llama-cpp-python = "^0.3.16"
+matplotlib = "^3.10.8"
+seaborn = "^0.13.2"
+cosine-similarity = "^0.1.2"
+network = "^0.1"
+python-louvain = "^0.16"
+ruff = "^0.15.10"
+
+
+[[tool.poetry.source]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+# Define o tamanho máximo da linha (padrão do Black/Ruff é 88)
+line-length = 100
+[tool.ruff.lint]
+# Habilita conjuntos de regras muito rigorosas:
+select = [
+    "E",   # pycodestyle (Erros de estilo)
+    "W",   # pycodestyle (Avisos de estilo)
+    "F",   # pyflakes (Erros lógicos como variáveis não usadas)
+    "I",   # isort (Organiza automaticamente as importações)
+    "N",   # pep8-naming (Força padrões de nomes PEP-8 para variáveis/funções)
+    "B",   # flake8-bugbear (Pega bugs comuns e armadilhas do Python)
+    "UP",  # pyupgrade (Força você a usar a sintaxe mais atual do Python)
+    "SIM", # flake8-simplify (Dicas para simplificar e limpar o código)
+    "C90", # mccabe (Checa a complexidade do código - muito ifs e loops)
+    "PT",  # flake8-pytest-style (Se for usar pytest no futuro)
+    "RET", # flake8-return (Boas práticas de uso do return)
+]
+# Regras que você prefere ignorar caso sejam rigorosas até demais
+ignore = []
+[tool.ruff.lint.mccabe]
+# Opcional: Define a complexidade máxima aceitável nas funções (padrão é 10)
+max-complexity = 10
