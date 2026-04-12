@@ -80,7 +80,7 @@ def get_model_topics(model, top_n: int = 15) -> list:
     # Sort by topic ID
     topics_data.sort(key=lambda x: x[0])
 
-    for word_weight_list in topics_data:
+    for topic_id, word_weight_list in topics_data:
         words = [word for word, weight in word_weight_list]
         topics_list.append(words)
 

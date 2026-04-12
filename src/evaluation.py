@@ -7,12 +7,59 @@ using the Louvain algorithm, and plotting inter-model projections using UMAP.
 """
 
 # Thridy-Party Imports
-
 import community.community_louvain as community_louvain
 import networkx as nx
 import numpy as np
 import pandas as pd
+import rbo
+import matplotlib.pyplot as plt
 from sklearn.metrics.pairwise import cosine_similarity
+from gensim.models.coherencemodel import CoherenceModel
+
+def coherence_score(topic_words, df_col_token, model_dict):
+    
+    coherence_model = CoherenceModel(
+            topics=topic_words,
+            texts=df_col_token,
+            dictionary=model_dict,
+            coherence='c_v'
+    )
+    
+    return coherence_model.get_coherence()
+
+
+def calculate_inter_model_diversity(topics_model_a: list, topics_model_b: list) -> float:
+    """
+    Calculates the average diversity (IRBO) between two models.
+    The higher the value (closer to 1), the more different the models are.
+    """
+    if not topics_model_a or not topics_model_b:
+        return 0.0  # Prevents error if list is empty
+
+    rbo_scores = []
+    
+    # For each topic in A, find the "twin" (best match) in B
+    for i, topic_a in enumerate(topics_model_a):
+        best_match_score = 0
+        
+        for j, topic_b in enumerate(topics_model_b):
+            # Ignore self-comparison if the same identical list of topics is passed (Intra-Model Diversity)
+            if topics_model_a is topics_model_b and i == j:
+                continue
+
+            # RBO p=0.9: High importance for the top of the ranking
+            score = rbo.RankingSimilarity(topic_a, topic_b).rbo(p=0.9)
+            if score > best_match_score:
+                best_match_score = score
+        
+        rbo_scores.append(best_match_score)
+    
+    # Average similarity of the best matches
+    avg_similarity = np.mean(rbo_scores)
+    
+    # IRBO = 1 - Similarity (Transforms into a "Difference" metric)
+    diversity_irbo = 1 - avg_similarity
+    return diversity_irbo
 
 
 def generate_topic_vector(topic_keywords: list, model_emb) -> np.ndarray:
@@ -139,3 +186,51 @@ def generate_communities(labels: list, sim_matrix_global: np.ndarray, threshold:
             print(f"  Topics: {', '.join(topics)}")
 
     return df_communities, G
+
+
+def plot_metric_across_models(
+    x_values: list,
+    models_metrics: dict,
+    title: str,
+    xlabel: str,
+    ylabel: str,
+    legend_title: str = "Model",
+    save_path: str = None
+) -> None:
+    """
+    Plots a generic line chart to compare metric scores across different models.
+    Can be used for both Coherence Score (C_v) and Topic Diversity (IRBO).
+    
+    Args:
+        x_values (list): Values for the x-axis (e.g., range of topics).
+        models_metrics (dict): Dictionary mapping model name to their respective metric scores list.
+                               Example: {'LSA': [0.6, 0.5, ...], 'LDA': [0.9, ...]}
+        title (str): The plot title.
+        xlabel (str): Label for the x-axis.
+        ylabel (str): Label for the y-axis.
+        legend_title (str): Title for the legend.
+        save_path (str, optional): If provided, saves the figure to the specified path.
+    """
+    plt.figure(figsize=(14, 7))
+    
+    for model_name, metrics in models_metrics.items():
+        plt.plot(x_values, metrics, marker='o', markersize=4, label=model_name)
+    
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    
+    # Ensure ticks match x_values
+    plt.xticks(x_values)
+    
+    plt.grid(True, linestyle='-', alpha=0.4, color='lightgrey')
+    plt.legend(title=legend_title, loc='lower right')
+    
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, bbox_inches='tight')
+        print(f"Plot saved to '{save_path}'")
+        
+    plt.show()
+    plt.close()

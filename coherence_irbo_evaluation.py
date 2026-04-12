@@ -1,11 +1,4 @@
-"""
-Main pipeline script for topic modeling analysis of student feedback.
-
-This script performs data preprocessing, cleaning, transformation and
-applies several topic modeling algorithms (LSA, NMF, BERTopic) to qualitative
-feedback from students. It is designed to be highly reproducible and anonymized
-for public distribution.
-"""
+from main import load_and_filter_data
 
 # Thridy-Party Imports
 import nltk
@@ -14,6 +7,7 @@ from bertopic.representation import MaximalMarginalRelevance
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
+from gensim.corpora import Dictionary
 
 from src import data_mining as data_mining
 from src import preprocessing as pre_processing
@@ -56,7 +50,6 @@ embedding_model = SentenceTransformer("PORTULAN/serafim-335m-portuguese-pt-sente
 umap_model = UMAP(min_dist=0.0, metric="cosine", random_state=RANDOM_SEED)
 representation_model = MaximalMarginalRelevance(diversity=0.4)
 
-
 def load_and_filter_data() -> pd.DataFrame:
     """
     Loads the dataset and applies filters to select the campus, academic unit
@@ -82,7 +75,6 @@ def load_and_filter_data() -> pd.DataFrame:
     df_course = selection.filter_by_curso(df_academic_unit, 'sistemas de informacao')
 
     return df_course
-
 
 def run_pipeline() -> None:
     """
@@ -132,103 +124,110 @@ def run_pipeline() -> None:
 
     # Start topic modeling with chosen baseline models
     models_to_run = ['lsa', 'lda', 'nmf', 'bertopic']
+    range_n_topics = range(2, 26)
+
+    # Dictionaries to store metrics
+    all_coherence_scores = {model: [] for model in models_to_run}
+    all_irbo_scores = {model: [] for model in models_to_run}
+
+    # Texts for coherence (LSA, LDA, NMF usually use lemmatized texts list of lists)
+    lemmatized_texts = df_lemmatized["comentario"].tolist()
+    
+    # Texts for BERTopic coherence (tokenize df_bertopic)
+    bertopic_texts = [str(text).split() for text in df_bertopic["comentario"].tolist()]
+    bertopic_dict = Dictionary(bertopic_texts)
 
     for model_name in models_to_run:
         print(f"\n=== MODEL {model_name.upper()} ===")
 
-        # Start LSA model
-        if model_name == 'lsa':
-            n_topics = 25
-            print(f"--- N TOPICS: {n_topics} ---")
+        for topic_num in range_n_topics:
+            model_topics = []
+            
+            if model_name == 'lsa':
+                lsa_model = data_mining.LSA_model(tfidf_matrix, lemmatized_dict, topic_num, RANDOM_SEED)
+                model_topics = utils.get_model_topics(lsa_model)
 
-            lsa_model = data_mining.LSA_model(tfidf_matrix, lemmatized_dict, n_topics, RANDOM_SEED)
-            model_topics = utils.get_model_topics(lsa_model)
+            elif model_name == 'lda':
+                lda_model = data_mining.LDA_model(
+                    corpus=bow_corpus,
+                    dict=lemmatized_dict,
+                    n_topics=topic_num,
+                    n_passes=30,
+                    seed=RANDOM_SEED
+                )
+                model_topics = utils.get_model_topics(lda_model)
 
-            df_lsa_topics = pd.DataFrame({'keywords': model_topics})
-            df_lsa_topics.to_pickle('src/data/df_lsa_topics.pkl')
-            print("✅ LSA completed!\n")
+            elif model_name == 'nmf':
+                _, h_matrix = data_mining.NMF_model(topic_num, tfidf_sparse, RANDOM_SEED)
+                feature_names = list(lemmatized_dict.values())
+                for topic_weights in h_matrix:
+                    top_indices = topic_weights.argsort()[:-15 - 1:-1]
+                    model_topics.append([feature_names[i] for i in top_indices])
 
-         # Start LDA model
-        elif model_name == 'lda':
-            n_topics = 13
-            print(f"--- N TOPICS: {n_topics} ---")
+            elif model_name == 'bertopic':
+                umap_iter = UMAP(min_dist=0.0, metric="cosine", random_state=RANDOM_SEED)
+                bertopic_params = {
+                    "vectorizer_model": vectorizer_model,
+                    "representation_model": representation_model,
+                    "umap_model": umap_iter,
+                    "language": "portuguese",
+                    "min_topic_size": 2,
+                    "nr_topics": topic_num,
+                    "verbose": False,
+                    "embedding_model": embedding_model,
+                    "calculate_probabilities": False,
+                    "top_n_words": 15,
+                }
+                topics, probs, b_model, new_topics = data_mining.BERTopic_model(
+                    df_bertopic["comentario"], bertopic_params
+                )
+                topic_word_dict = b_model.get_topics()
+                for topic_id in sorted(topic_word_dict.keys()):
+                    if topic_id == -1:
+                        continue
+                    t_words = [w for w, _ in topic_word_dict[topic_id]]
+                    if len(t_words) >= 2:
+                        model_topics.append(t_words)
 
-            lda_model = data_mining.LDA_model(
-                corpus=bow_corpus,
-                dict=lemmatized_dict,
-                n_topics=n_topics,
-                n_passes=30,
-                seed=RANDOM_SEED
-            )
+            # Evaluate Coherence
+            if model_name == 'bertopic':
+                co_score = evaluation.coherence_score(model_topics, bertopic_texts, bertopic_dict)
+            else:
+                co_score = evaluation.coherence_score(model_topics, lemmatized_texts, lemmatized_dict)
+            all_coherence_scores[model_name].append(co_score)
 
-            model_topics = utils.get_model_topics(lda_model)
+            # Evaluate Diversity
+            div_score = evaluation.calculate_inter_model_diversity(model_topics, model_topics)
+            all_irbo_scores[model_name].append(div_score)
 
-            df_lda_topics = pd.DataFrame({'keywords': model_topics})
-            df_lda_topics.to_pickle('src/data/df_lda_topics.pkl')
-            print("✅ LDA completed!\n")
+            print(f"[{model_name.upper()}] Topics: {topic_num} -> Coherence: {co_score:.4f} | IRBO: {div_score:.4f}")
 
-         # Start NMF model
-        elif model_name == 'nmf':
-            n_topics = 13
-            print(f"--- N TOPICS: {n_topics} ---")
+        print(f"✅ {model_name.upper()} completed!\n")
 
-            _, h_matrix = data_mining.NMF_model(n_topics, tfidf_sparse, RANDOM_SEED)
+    # Generate and save plots
+    print("Generating Coherence / IRBO plots...")
+    
+    evaluation.plot_metric_across_models(
+        x_values=list(range_n_topics),
+        models_metrics=all_coherence_scores,
+        title="Score de Coerência (C_v) por Número de Tópicos",
+        xlabel="Número de Tópicos",
+        ylabel="Score de Coerência (C_v)",
+        legend_title="Modelo",
+        save_path="src/data/coherence_plot.png"
+    )
 
-            feature_names = list(lemmatized_dict.values())
-            topic_words = []
+    evaluation.plot_metric_across_models(
+        x_values=list(range_n_topics),
+        models_metrics=all_irbo_scores,
+        title="Score de Diversidade de Tópicos (IRBO) por Modelo e Número de Tópicos",
+        xlabel="Número de Tópicos",
+        ylabel="Score de Diversidade de Tópicos (IRBO)",
+        legend_title="Modelo",
+        save_path="src/data/irbo_plot.png"
+    )
 
-            for topic in h_matrix:
-                top_indices = topic.argsort()[:-15 - 1:-1]
-                topic_words.append([feature_names[i] for i in top_indices])
-
-            df_nmf_topics = pd.DataFrame({'keywords': topic_words})
-            df_nmf_topics.to_pickle('src/data/df_nmf_topics.pkl')
-            print("✅ NMF completed!\n")
-
-         # Start BERTopic model
-        elif model_name == 'bertopic':
-            n_topics = 14
-
-            print(f"--- N TOPICS: {n_topics} ---")
-
-            umap_iter = UMAP(min_dist=0.0, metric="cosine", random_state=RANDOM_SEED)
-            bertopic_params = {
-                "vectorizer_model": vectorizer_model,
-                "representation_model": representation_model,
-                "umap_model": umap_iter,
-                "language": "portuguese",
-                "min_topic_size": 2,
-                "nr_topics": n_topics,
-                "verbose": False,
-                "embedding_model": embedding_model,
-                "calculate_probabilities": False,
-                "top_n_words": 15,
-            }
-
-            topics, probs, b_model, new_topics = data_mining.BERTopic_model(
-                df_bertopic["comentario"], bertopic_params
-            )
-
-            topic_info_df = b_model.get_topic_info()
-            df_bertopic_results = pd.DataFrame({
-                'keywords': topic_info_df['Representation'],
-                'docs': topic_info_df['Representative_Docs']
-            })
-
-            topic_word_dict = b_model.get_topics()
-            words_list = []
-
-            for topic_id in sorted(topic_word_dict.keys()):
-                if topic_id == -1:
-                    continue  # Ignore outlier topic
-
-                t_words = [w for w, _ in topic_word_dict[topic_id]]
-                if len(t_words) >= 2:
-                    words_list.append(t_words)
-
-            print(df_bertopic_results)
-            df_bertopic_results.to_pickle('src/data/df_bertopic_topics.pkl')
-            print("✅ BERTopic completed!\n")
+    print("✅ Pipeline Completed!")
 
 
 if __name__ == "__main__":
