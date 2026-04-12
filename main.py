@@ -16,10 +16,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 
 from src import data_mining as data_mining
+from src import evaluation as evaluation
 from src import preprocessing as pre_processing
 from src import selection as selection
 from src import transformation as transformation
-from src import evaluation as evaluation
 
 # Local Imports
 from src import utils
@@ -79,9 +79,8 @@ def load_and_filter_data() -> pd.DataFrame:
     # Filter by campus, academic unit and course
     df_campus = selection.filter_by_campus(df_selected, 'belem')
     df_academic_unit = selection.filter_by_und_acad(df_campus, 'icen')
-    df_course = selection.filter_by_curso(df_academic_unit, 'sistemas de informacao')
 
-    return df_course
+    return selection.filter_by_curso(df_academic_unit, 'sistemas de informacao')
 
 
 def run_pipeline() -> None:
@@ -132,6 +131,7 @@ def run_pipeline() -> None:
 
     # Start topic modeling with chosen baseline models
     models_to_run = ['lsa', 'lda', 'nmf', 'bertopic']
+    all_models_results = {}
 
     for model_name in models_to_run:
         print(f"\n=== MODEL {model_name.upper()} ===")
@@ -146,6 +146,7 @@ def run_pipeline() -> None:
 
             df_lsa_topics = pd.DataFrame({'keywords': model_topics})
             df_lsa_topics.to_pickle('src/data/df_lsa_topics.pkl')
+            all_models_results['LSA'] = df_lsa_topics
             print("✅ LSA completed!\n")
 
          # Start LDA model
@@ -153,18 +154,13 @@ def run_pipeline() -> None:
             n_topics = 13
             print(f"--- N TOPICS: {n_topics} ---")
 
-            lda_model = data_mining.LDA_model(
-                corpus=bow_corpus,
-                dict=lemmatized_dict,
-                n_topics=n_topics,
-                n_passes=30,
-                seed=RANDOM_SEED
-            )
+            lda_model = data_mining.LDA_model(bow_corpus, lemmatized_dict, n_topics, 30, RANDOM_SEED)
 
             model_topics = utils.get_model_topics(lda_model)
 
             df_lda_topics = pd.DataFrame({'keywords': model_topics})
             df_lda_topics.to_pickle('src/data/df_lda_topics.pkl')
+            all_models_results['LDA'] = df_lda_topics
             print("✅ LDA completed!\n")
 
          # Start NMF model
@@ -183,6 +179,7 @@ def run_pipeline() -> None:
 
             df_nmf_topics = pd.DataFrame({'keywords': topic_words})
             df_nmf_topics.to_pickle('src/data/df_nmf_topics.pkl')
+            all_models_results['NMF'] = df_nmf_topics
             print("✅ NMF completed!\n")
 
          # Start BERTopic model
@@ -226,9 +223,22 @@ def run_pipeline() -> None:
                 if len(t_words) >= 2:
                     words_list.append(t_words)
 
-            print(df_bertopic_results)
             df_bertopic_results.to_pickle('src/data/df_bertopic_topics.pkl')
+            all_models_results['BERTopic'] = df_bertopic_results[['keywords']]
             print("✅ BERTopic completed!\n")
+
+    # ----- Consolidating and saving all results -----
+    # Convert dict to a single DataFrame with a new 'model' column
+    for model_name, df in all_models_results.items():
+        if 'model' not in df.columns:
+            df.insert(0, 'model', model_name)
+
+    df_all_topics = pd.concat(all_models_results.values(), ignore_index=True)
+
+    # Save as CSV (best for universal access without external Excel packages)
+    df_all_topics.to_csv('output/topic_modeling/all_models_topics.csv', index=False, encoding='utf-8-sig')
+
+    print("✅ Consolidated topics saved to all_models_topics.csv!\n")
 
 
 if __name__ == "__main__":
