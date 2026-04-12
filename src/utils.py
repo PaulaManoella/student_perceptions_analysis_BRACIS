@@ -1,60 +1,87 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+"""
+Utilities Module.
+
+This module provides common helper functions used across the project for
+file ingestion, dataset concatenation, removing duplicates and nulls, and
+extracting raw topics from Gensim distribution models.
+"""
+
+# Standard Imports
 from pathlib import Path
 
-# Diretório do arquivo utils.py
-ROOT = Path(__file__).resolve().parent.parent   
+# Third-Party Imports
+import pandas as pd
+
+# Paths Setup
+ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 
 
-def read_dataset():
+def read_dataset() -> list:
+    """
+    Iterates sequentially over predefined internal datasets (csv/xlsx),
+    reads them into pandas DataFrames, standardizes the first column name, 
+    and returns a list of DataFrames.
+    """
     bases = ['18.2', '18.4', '19.2', '19.4', '22.2', '22.4', '23.2', '23.4', '24.2', '24.4']
-    avalia_anos = []
+    evaluations_by_year = []
 
-    for ano in bases:
-        # print('lendo: ' + f'avalia-20{ano}.csv')
+    for year in bases:
+        csv_path = DATA / f"avalia-20{year}.csv"
+        xlsx_path = DATA / f"avalia-20{year}.xlsx"
 
-        csv_path = DATA / f"avalia-20{ano}.csv"
-        xlsx_path = DATA / f"avalia-20{ano}.xlsx"
-
-        if ano == '24.2':
-            avalia_ano = pd.read_excel(xlsx_path)
+        # Note: 24.2 uses XLSX due to parsing anomalies with CSV encodings.
+        if year == '24.2':
+            evaluation_df = pd.read_excel(xlsx_path)
         else:
-            avalia_ano = pd.read_csv(csv_path, delimiter=';', encoding='latin1', on_bad_lines='skip')
+            evaluation_df = pd.read_csv(csv_path, delimiter=';', encoding='latin1', on_bad_lines='skip')
 
-        avalia_ano.columns.values[0] = 'ANO-PERIODO'
-        avalia_anos.append(avalia_ano)
+        evaluation_df.columns.values[0] = 'ANO-PERIODO'
+        evaluations_by_year.append(evaluation_df)
 
-    return avalia_anos
+    return evaluations_by_year
 
-def concat_dataset(dataset):
-  return pd.concat(dataset, ignore_index=True)
 
-def drop_null_duplicate(df, col:str, values_to_remove):
-    df = df[~df[col].isin(values_to_remove)]
-    df = df.drop_duplicates(subset=[col], keep="first").reset_index(drop=True)
-    return df
-
-def get_model_topics(model, top_n=15):
+def concat_dataset(dataset_list: list) -> pd.DataFrame:
     """
-    Extrai a lista de palavras de modelos Gensim (LDA, LSA/LSI).
-    Retorna: List[List[str]] no formato que o CoherenceModel exige.
+    Concatenates a list of Pandas DataFrames into a single unified DataFrame 
+    ignoring the original indices.
     """
-    # num_topics=-1 garante que ele pegue TODOS os tópicos do modelo
-    # num_words=top_n define quantas palavras por tópico
-    # formatted=False retorna a lista de tuplas (palavra, peso) em vez de string
+    return pd.concat(dataset_list, ignore_index=True)
+
+
+def drop_null_duplicate(df: pd.DataFrame, target_column: str, values_to_remove: list) -> pd.DataFrame:
+    """
+    Filters rows where the value in the specified target column is present in 
+    the removal list, and removes duplicates keeping only the first occurrence.
+    """
+    df = df[~df[target_column].isin(values_to_remove)]
+
+    return df.drop_duplicates(subset=[target_column], keep="first").reset_index(drop=True)
+
+
+def get_model_topics(model, top_n: int = 15) -> list:
+    """
+    Extracts the keyword lists out of the native LSA and LDA Gensim models.
+    Ensures the topic IDs are naturally sorted because Gensim can scramble
+    output order.
+    
+    Returns:
+        A list of lists (List[List[str]]) containing strings in the format 
+        required natively by the CoherenceModel.
+    """
+    # num_topics = -1 to fetch all available topics mapped in the model memory.
+    # num_words = top_n establishes exact keyword length output for each topic array.
+    # formatted = False secures lists of raw tuple pairs (word, probability value).
     topics_data = model.show_topics(num_topics=-1, num_words=top_n, formatted=False)
-    
+
     topics_list = []
-    
-    # O retorno é [(id_topico, [(palavra, peso), ...]), ...]
-    # O Gensim nem sempre retorna os tópicos na ordem 0, 1, 2... então é bom ordenar pelo ID
+
+    # Sort by topic ID
     topics_data.sort(key=lambda x: x[0])
-    
-    for topic_id, word_weight_list in topics_data:
-        # Extraímos apenas a palavra, ignorando o peso
+
+    for word_weight_list in topics_data:
         words = [word for word, weight in word_weight_list]
         topics_list.append(words)
-        
+
     return topics_list
