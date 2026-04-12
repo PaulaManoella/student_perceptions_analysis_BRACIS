@@ -14,6 +14,8 @@ from gensim.models import LsiModel, LdaModel
 from gensim.corpora import Dictionary
 from sklearn.decomposition import NMF
 from bertopic import BERTopic
+from gensim.models.coherencemodel import CoherenceModel
+import rbo
 
 
 def LSA_model(tfidf_corpus: list, vocab_dict: Dictionary, n_topics: int, seed: int) -> LsiModel:
@@ -135,4 +137,49 @@ def BERTopic_model(df_col: pd.Series, params_dict: Dict[str, Any]) -> Tuple[list
     )
     
     return topics, probs, bertopic_model, new_topics
+
+
+def coherence_score(topic_words, df_col_token, model_dict):
     
+    coherence_model = CoherenceModel(
+            topics=topic_words,
+            texts=df_col_token,
+            dictionary=model_dict,
+            coherence='c_v'
+    )
+    
+    return coherence_model.get_coherence()
+
+
+def calculate_inter_model_diversity(topics_model_a: list, topics_model_b: list) -> float:
+    """
+    Calculates the average diversity (IRBO) between two models.
+    The higher the value (closer to 1), the more different the models are.
+    """
+    if not topics_model_a or not topics_model_b:
+        return 0.0  # Prevents error if list is empty
+
+    rbo_scores = []
+    
+    # For each topic in A, find the "twin" (best match) in B
+    for i, topic_a in enumerate(topics_model_a):
+        best_match_score = 0
+        
+        for j, topic_b in enumerate(topics_model_b):
+            # Ignore self-comparison if the same identical list of topics is passed (Intra-Model Diversity)
+            if topics_model_a is topics_model_b and i == j:
+                continue
+
+            # RBO p=0.9: High importance for the top of the ranking
+            score = rbo.RankingSimilarity(topic_a, topic_b).rbo(p=0.9)
+            if score > best_match_score:
+                best_match_score = score
+        
+        rbo_scores.append(best_match_score)
+    
+    # Average similarity of the best matches
+    avg_similarity = np.mean(rbo_scores)
+    
+    # IRBO = 1 - Similarity (Transforms into a "Difference" metric)
+    diversity_irbo = 1 - avg_similarity
+    return diversity_irbo

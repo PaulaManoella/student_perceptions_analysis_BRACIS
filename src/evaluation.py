@@ -11,55 +11,8 @@ import community.community_louvain as community_louvain
 import networkx as nx
 import numpy as np
 import pandas as pd
-import rbo
 import matplotlib.pyplot as plt
 from sklearn.metrics.pairwise import cosine_similarity
-from gensim.models.coherencemodel import CoherenceModel
-
-def coherence_score(topic_words, df_col_token, model_dict):
-    
-    coherence_model = CoherenceModel(
-            topics=topic_words,
-            texts=df_col_token,
-            dictionary=model_dict,
-            coherence='c_v'
-    )
-    
-    return coherence_model.get_coherence()
-
-
-def calculate_inter_model_diversity(topics_model_a: list, topics_model_b: list) -> float:
-    """
-    Calculates the average diversity (IRBO) between two models.
-    The higher the value (closer to 1), the more different the models are.
-    """
-    if not topics_model_a or not topics_model_b:
-        return 0.0  # Prevents error if list is empty
-
-    rbo_scores = []
-    
-    # For each topic in A, find the "twin" (best match) in B
-    for i, topic_a in enumerate(topics_model_a):
-        best_match_score = 0
-        
-        for j, topic_b in enumerate(topics_model_b):
-            # Ignore self-comparison if the same identical list of topics is passed (Intra-Model Diversity)
-            if topics_model_a is topics_model_b and i == j:
-                continue
-
-            # RBO p=0.9: High importance for the top of the ranking
-            score = rbo.RankingSimilarity(topic_a, topic_b).rbo(p=0.9)
-            if score > best_match_score:
-                best_match_score = score
-        
-        rbo_scores.append(best_match_score)
-    
-    # Average similarity of the best matches
-    avg_similarity = np.mean(rbo_scores)
-    
-    # IRBO = 1 - Similarity (Transforms into a "Difference" metric)
-    diversity_irbo = 1 - avg_similarity
-    return diversity_irbo
 
 
 def generate_topic_vector(topic_keywords: list, model_emb) -> np.ndarray:
@@ -198,7 +151,7 @@ def plot_metric_across_models(
     save_path: str = None
 ) -> None:
     """
-    Plots a generic line chart to compare metric scores across different models.
+    Plots a line chart to compare metric scores across different models.
     Can be used for both Coherence Score (C_v) and Topic Diversity (IRBO).
     
     Args:

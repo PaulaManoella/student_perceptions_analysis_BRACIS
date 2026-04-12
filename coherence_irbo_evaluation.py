@@ -1,4 +1,11 @@
-from main import load_and_filter_data
+"""
+Defining k topics .
+
+This script processes the generated topics from four topic modeling algorithms
+and calculates their semantic similarity using a Portuguese sentence-transformer
+model. It then constructs a similarity network and extracts topic communities
+across models using the Louvain algorithm
+"""
 
 # Thridy-Party Imports
 import nltk
@@ -9,14 +16,15 @@ from sklearn.feature_extraction.text import CountVectorizer
 from umap import UMAP
 from gensim.corpora import Dictionary
 
+# Load Imports
+from main import load_and_filter_data
 from src import data_mining as data_mining
 from src import preprocessing as pre_processing
 from src import selection as selection
 from src import transformation as transformation
 from src import evaluation as evaluation
-
-# Local Imports
 from src import utils
+
 
 # -----------------------------------------------------------------------------
 # Configuration & Constants
@@ -150,7 +158,7 @@ def run_pipeline() -> None:
             elif model_name == 'lda':
                 lda_model = data_mining.LDA_model(
                     corpus=bow_corpus,
-                    dict=lemmatized_dict,
+                    vocab_dict=lemmatized_dict,
                     n_topics=topic_num,
                     n_passes=30,
                     seed=RANDOM_SEED
@@ -191,13 +199,13 @@ def run_pipeline() -> None:
 
             # Evaluate Coherence
             if model_name == 'bertopic':
-                co_score = evaluation.coherence_score(model_topics, bertopic_texts, bertopic_dict)
+                co_score = data_mining.coherence_score(model_topics, bertopic_texts, bertopic_dict)
             else:
-                co_score = evaluation.coherence_score(model_topics, lemmatized_texts, lemmatized_dict)
+                co_score = data_mining.coherence_score(model_topics, lemmatized_texts, lemmatized_dict)
             all_coherence_scores[model_name].append(co_score)
 
             # Evaluate Diversity
-            div_score = evaluation.calculate_inter_model_diversity(model_topics, model_topics)
+            div_score = data_mining.calculate_inter_model_diversity(model_topics, model_topics)
             all_irbo_scores[model_name].append(div_score)
 
             print(f"[{model_name.upper()}] Topics: {topic_num} -> Coherence: {co_score:.4f} | IRBO: {div_score:.4f}")
@@ -210,21 +218,21 @@ def run_pipeline() -> None:
     evaluation.plot_metric_across_models(
         x_values=list(range_n_topics),
         models_metrics=all_coherence_scores,
-        title="Score de Coerência (C_v) por Número de Tópicos",
-        xlabel="Número de Tópicos",
-        ylabel="Score de Coerência (C_v)",
-        legend_title="Modelo",
-        save_path="src/data/coherence_plot.png"
+        title="Coherence (Cv) score per model and topics number",
+        xlabel="Topics number",
+        ylabel="Coherence (Cv) score",
+        legend_title="Model",
+        save_path="output/figure/coherence_plot.pdf"
     )
 
     evaluation.plot_metric_across_models(
         x_values=list(range_n_topics),
         models_metrics=all_irbo_scores,
-        title="Score de Diversidade de Tópicos (IRBO) por Modelo e Número de Tópicos",
-        xlabel="Número de Tópicos",
-        ylabel="Score de Diversidade de Tópicos (IRBO)",
-        legend_title="Modelo",
-        save_path="src/data/irbo_plot.png"
+        title="Topic diversity (IRBO) score per model and topics number",
+        xlabel="Topics number",
+        ylabel="Topic diversity (IRBO) score",
+        legend_title="Model",
+        save_path="output/figure/irbo_plot.pdf"
     )
 
     print("✅ Pipeline Completed!")
