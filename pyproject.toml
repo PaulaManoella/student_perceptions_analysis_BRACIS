@@ -1,5 +1,6 @@
 [tool.poetry]
 name = "avalia-analysis"
+package-mode = false
 version = "0.1.0"
 description = "este projeto tem coALIA UFPA"
 authors = ["pmano <pmanoella1@gmail.com>"]
@@ -25,6 +26,7 @@ network = "^0.1"
 python-louvain = "^0.16"
 ruff = "^0.15.10"
 rbo = "^0.1.3"
+pdf2image = "^1.17.0"
 
 
 [[tool.poetry.source]]
