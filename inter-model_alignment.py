@@ -12,7 +12,7 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 
 # Local Imports
-from src import avaliacao, utils
+from src import evaluation, utils
 
 # -----------------------------------------------------------------------------
 # Configuration & Constants
@@ -50,7 +50,7 @@ def run_alignment() -> None:
     for model_name, df_topics in topics_by_model.items():
         vectors = []
         for keywords in df_topics[TOPIC_KEYWORD_COLUMN]:
-            vec = avaliacao.generate_topic_vector(keywords, embedding_model)
+            vec = evaluation.generate_topic_vector(keywords, embedding_model)
             vectors.append(vec)
         all_topic_vectors[model_name] = vectors
 
@@ -65,7 +65,7 @@ def run_alignment() -> None:
     labels += [f"BERTopic_Topic_{i}" for i in range(14)] # Indices 51 to 64
 
     # Apply Louvain community detection to find commom topics across models and exclusive topics
-    df_communities, network_graph = avaliacao.louvain_comunidade_exclusivos(
+    df_communities, network_graph = evaluation.generate_communities(
         labels,
         cosine_matrix,
         threshold=SIMILARITY_THRESHOLD,
@@ -73,6 +73,11 @@ def run_alignment() -> None:
     )
 
     print("\n✅ Inter-model alignment execution completed successfully!\n")
+
+    print("\n --- Communities Detected --- \n")
+
+    for idx, row in df_communities.iterrows():
+        print(f"Community {idx}: {', '.join(row['topics'])}")
 
 
 if __name__ == "__main__":
