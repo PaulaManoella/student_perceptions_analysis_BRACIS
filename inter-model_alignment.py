@@ -12,7 +12,7 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 
 # Local Imports
-from src import evaluation, utils
+from src import evaluation
 
 # -----------------------------------------------------------------------------
 # Configuration & Constants
@@ -55,7 +55,7 @@ def run_alignment() -> None:
         all_topic_vectors[model_name] = vectors
 
     # Generate a cosine similarity matrix encompassing all valid model combinations
-    df_cosine_similarity, cosine_matrix = utils.generate_cosine_matrix(all_topic_vectors)
+    df_cosine_similarity, cosine_matrix = evaluation.generate_cosine_matrix(all_topic_vectors)
 
     # Generate labels for the similarity matrix matching the total number of topics
     labels = []
@@ -74,10 +74,10 @@ def run_alignment() -> None:
 
     print("\n✅ Inter-model alignment execution completed successfully!\n")
 
-    print("\n --- Communities Detected --- \n")
+    print(f"\n --- Communities Detected --- \n{df_communities}")
 
-    for idx, row in df_communities.iterrows():
-        print(f"Community {idx}: {', '.join(row['topics'])}")
+    # for idx, row in df_communities.iterrows():
+    #     print(f"Community {idx}: {', '.join(row['topics'])}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,12 @@
+Model,Keywords
+NMF,"(8) teach, bad, weak, possess, attention, objective, rushed, incredible, point, objective, congrats, approach, terrible, patience, approach"
+NMF,"(12) miss, class, room, communication, experience, warn, punctual, inside, seen, of that, hardly, present, questions, personal, commitment"
+BERTopic,"(2) schedule, times, reasons, some, time, many, too much, missed, fast, bus, night, work, many, punctual, are"
+BERTopic,"(4) didactics, little, excellent, uncompromising, pretends, didactic, disorganized, terrible, points, extremely, knows, quite, unrealistic, right, explosive"
+BERTopic,"(6) evaluation, evaluations, could, correction, clear, corrected, included, discursive, method, confusing, only, left, in, tests, forms"
+BERTopic,"(8) nothing, joined, recorded, declare, arrives, nor, occurred, early, error, social, name, moment, evaluate, did, grade"
+BERTopic,"(9) professional, ok, impeccable, qualified, fun, xxxxxxxxxxxx, regular, wonderful, wonderful, present, objective, name, sir, good, horrible"
+BERTopic,"(10) comments, offensive, comment, read, comment, will be, positive, negative, unnecessary, never, other, so much, nothing, hour, ''"
+BERTopic,"(11) improve, needs, leave, didactics, experience, interest, love, attract, gain, field, way, interesting, evolve, make an effort, content-focused"
+BERTopic,"(12) sex, comments, sexual, ex, sexual, unnecessary, discussed, does, about, abuse, about, certain, approach, demanding, individual"
+BERTopic,"(13) slides, portuguese, complete, tasks, mastery, we explained, influenced, portugol, transport, portuguese, send, we would spend, delivered, correct, asked"

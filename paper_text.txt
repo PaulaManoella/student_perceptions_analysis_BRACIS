@@ -1,0 +1,969 @@
+Analyzing Student Perceptions in Course
+Evaluation: A Hybrid Approach Using Topic
+Modeling and LLM-Based Automatic Labeling
+Anonymous Author(s)
+Anonymous Institution
+anonymous@example.com
+
+Abstract. The course evaluation program is an institutional self-evaluation
+initiative at a large public university in Northern Brazil that collects
+student and faculty perceptions regarding dimensions such as student
+assessment, teaching performance, and physical facilities. The instrument combines closed-ended questions with open fields aimed at positive, negative, and general comments. However, analyzing these comments is highly complex due to the large volume of data and the impracticality of manual textual analysis. Addressing this challenge, this
+study applies topic modeling to identify recurrent themes and performs
+automatic topic labeling via Generative Artificial Intelligence. Analyzing data from an undergraduate course, the study compared the LSA,
+LDA, NMF, and BERTopic algorithms, and evaluated the performance
+of the Llama-3.1-8B-Instruct LLM for the semantic labeling of the identified clusters. Results demonstrated BERTopic’s superior interpretability
+in identifying latent patterns and unique topics not captured by other
+models, alongside the high efficacy of the LLM in semantic interpretation. Ultimately, the proposed approach converts student feedback into
+strategic intelligence, supporting data-driven decision-making for educational improvement and valuing student participation.
+Keywords: Topic modeling · Automatic topic labeling · Student feedback.
+
+1
+
+Introduction
+
+One of the biggest challenges in academic management is convert institutional
+evaluation data in effective improvements. As noted by [8] and [6], reports frequently assume bureaucratic nature and generate a data volume hard to interpret
+strategically. In Brazil, the Sistema Nacional de Avaliação da Educação Superior
+(SINAES) governs the evaluation process based on three pillars: internal and
+external institutional evaluation, course and student performance evaluation.
+In line with these guidelines, within the scope of course evaluation, the public university conducts the self-assessment of undergraduate courses to identify
+academic and administrative improvement opportunities. The program collects
+students’ and teachers’ perceptions via online questionnaire that combines closed
+
+2
+
+Anonymous Author(s)
+
+questions, on a Likert scale, and open fields, that are optional free text comments.
+Although the program generate quantitative detailed reports, there is a lack of
+systematic analysis of textual feedbacks due to the operational infeasibility of
+manual processing.
+To extract knowledge from this vast corpus, Natural Language Processing
+(NLP) emerges as a viable solution. In this context, topic modeling allows grouping documents and discovering latent structures without prior labeling, based on
+the co-occurrence of terms [14, 16, 24]. However, the topic modeling algorithms
+output only isolated keywords, requiring subjective and cognitively demanding
+human intervention to interpret the themes. Aiming to mitigate this limitation and the underutilization of program’s vast repository of textual data, the
+main goal of this paper is to evaluate whether integrating topic modeling algorithms with automatic labeling via Generative Artificial Intelligence produces
+interpretable semantic diagnoses suitable for supporting institutional analysis.
+By applying this approach to student comments between 2019 and 2024, this
+research presents three main contributions: (1) the development of an end-toend hybrid pipeline for institutional textual data, integrating LSA, LDA, NMF,
+and BERTopic algorithms with LLM-based generative labeling; (2) a novel comparative methodology combining embeddings, cosine similarity, and graph-based
+community detection to systematically identify common and exclusive thematic
+niches across models; and (3) the practical implementation of this framework to
+convert unstructured feedback into actionable strategic intelligence. Ultimately,
+this approach equips managers and teachers with data-driven insights, filling a
+regional gap in text clustering studies and valuing student perspectives in institutional self-evaluation.
+
+2
+
+Literature review
+
+2.1
+
+Topic modeling
+
+Recent studies indicate the predominance of traditional frequency-based NLP
+models, which disregard word order and semantic context [10]. In the analysis of
+student feedback, [19] compared LDA, LSA, NMF, BERTopic, and PCA, highlighting NMF for its higher thematic recall and PCA for its superior accuracy.
+Complementarily, [20] proposed the integration of NMF with the supervision
+of human experts, demonstrating that, although the algorithm identifies latent
+themes, human intervention is crucial to mitigate erroneous classifications. In
+the context of remote learning during the pandemic, [17] analyzed BERTopic,
+LDA, LSA, and NMF applied to student perceptions. The results indicated that
+NMF better detailed mental health experiences, while BERTopic captured dense
+logistical and educational nuances. In the context of social media, [30] evaluated Twitter interactions via BERTopic, LDA, and LSA, with the final analysis
+demonstrating the robustness of BERTopic for short and informal texts.
+In the studies analyzed, it was observed that although modeling algorithms
+automate the identification of latent thematic patterns, the dependence on human intervention for the semantic interpretation and evaluation of the results
+
+AI-Powered Topic Modeling for Institutional Student Feedback Analysis
+
+3
+
+remains a recurring limitation. This work seeks to address this limitation by integrating LLM for the interpretation of the results obtained, in addition to contributing by integrating the application of NLP to the context of self-assessment
+in higher education.
+
+2.2
+
+Automatic topic labeling
+
+The integration of LLMs into topic modeling pipelines has proven to be an
+effective strategy for enhancing automatic topic summarization and labeling.
+For instance, [21] used the GPT-3.5-Turbo-Instruct model alongside Persona
+Prompting to refine topics generated by BERTopic. Pairwise semantic coherence validations demonstrated that topic subdivision allowed for a more effective
+identification of dominant themes. In the context of social media, [1] proposed
+a hybrid approach combining BERTopic and the Llama model to analyze feminist debates on Instagram. When instructed via prompts containing keywords
+and representative documents, the LLM generated labels that showed high semantic alignment with descriptions provided by human analysts. Finally, [28]
+introduced the TopicTag framework, which integrates LLMs to automate the interpretation of NMF-generated topics. By employing Prompt Tuning and Chain
+of Thought (CoT) reasoning over keywords and representative documents, their
+study demonstrated that the Llama model outperformed proprietary LLMs in
+the semantic interpretation of clustered topics.
+Although the reviewed literature has applications for automating topic labeling, studies of these techniques aimed at supporting decision-making in institutional evaluations remain underexplored. The present study aims to fill this
+gap by applying this approach to student feedback, evaluating whether semantic
+interpretation via LLM is capable of capturing the specificities of the university
+context.
+
+3
+
+Methodology
+
+For the present study, the Knowledge Discovery in Databases (KDD) methodology of Fayyad (1996) was adopted, focused on extracting valid patterns from data
+through data mining. The work is organized based on the five stages of KDD,
+presented in Figure 1, which illustrates an adaptation of the original methodology, since the preprocessing and transformation stages followed distinct flows to
+suit the different modeling approaches.
+The experiments were implemented in Python1 using the Jupyter Notebook
+environment. Due to the processing cost required for multiple runs in the modeling and automatic labeling steps, the experiments were executed remotely via
+Secure Shell (SSH) through a remote physical server.
+1
+
+https://www.python.org/
+
+4
+
+Anonymous Author(s)
+1. SELECTION
+
+Raw comments
+
+FLOW A
+
+FLOW B
+
+2.1 PREPROCESSING
+
+2.2 PREPROCESSING
+
+Cleaning and normalization
+Stopwords remove
+
+Tokenization
+Lemmatization
+
+3.1 TRANSFORMATION
+LSA: TF-IDF
+
+LDA: Bag of Words
+
+Cleaning and normalization
+
+3.2 TRANSFORMATION
+
+NMF: Esparse TF-IDF
+
+BERTopic: Embeddings
+
+4. DATA MINING
+Models
+LSA, LDA, NMF, BERTopic
+
+K topics definition metrics
+
+Coherence (C_v)
+Diversity (IRBO)
+
+5. INTERPRETATION AND EVALUATION
+
+Qualitative Comparative Analysis
+
+Automatic Labeling with LLM
+
+Fig. 1. Flowchart of the steps in the adapted KDD methodology.
+
+3.1
+
+Selection
+
+The research data was provided by the institution’s Information and Communication Technology Center (CTIC) in Comma-Separated Values (CSV) format,
+covering the period from 2019 to 2024, except for the years 2020 and 2021,
+in which the questionnaire was not applied due to the pandemic and remote
+learning. Because it contains sensitive information, the data is not publicly
+available and underwent a de-identification process before being provided for
+this research, safeguarding the privacy of respondents. The databases contain
+attributes such as course, academic unit, subject, teacher, schedule, location of
+classes, answers to closed questions, and open comments, totaling 86,708 records
+across all databases.
+Initially, the database was filtered to restrict the scope to the target campus
+and course, resulting in a corpus with 767 records. For the analysis, only identification columns such as year of evaluation, campus, academic unit, course,
+subject, professor, and comments were retained. The structure of the comments
+is divided into three categories: positive comments, intended for praise; negative comments, aimed at criticism; and general comments, intended for diverse
+subjects such as pedagogical, structural, and institutional aspects.
+3.2
+
+Preprocessing
+
+After defining the scope, preprocessing proceeded with the concatenation of data
+from different academic years into a single dataset. Subsequently, text cleaning
+techniques common to all models were applied, including conversion to lowercase
+characters and removal of noise such as numbers, punctuation, and special characters. Additionally, an anonymization operation was incorporated to remove
+explicit professor names from comments, starting from the “professor” attribute
+
+AI-Powered Topic Modeling for Institutional Student Feedback Analysis
+
+5
+
+of the dataset itself. This decision aims to ensure institutional confidentiality
+and eliminate noise that could bias clustering by individual identities instead of
+academic themes.
+Next, for the LSA, LDA, and NMF models, additional textual treatment was
+applied, including tokenization, stopword removal, and term lemmatization. Finally, null and duplicate records were excluded, resulting in a final pre-processed
+database with 619 valid records.
+3.3
+
+Transformation
+
+For better data organization, the original columns for positive, negative, and general comments were unified into a single column called “comment”. This strategy
+aimed to mitigate inconsistencies such as the insertion of criticisms in fields
+intended for praise and vice versa. To preserve the origin of each record after
+concatenation, the “label” column was created to classify the comment category:
+0 for negative comment, 1 for positive, and 2 for general.
+To prepare the LSA, LDA, and NMF models, a dictionary of terms was
+constructed and manually refined to exclude contextual stopwords. From this
+dictionary, vector representations were specifically tailored for each algorithm.
+Given its probabilistic nature, LDA utilized the Bag of Words (BoW) matrix
+to capture absolute term frequencies. In contrast, LSA and NMF adopted the
+TF-IDF matrix to enhance semantic separation by weighting strictly informative
+terms. Additionally, the NMF implementation employed a sparse TF-IDF matrix
+to optimize memory and computational time during factorization by processing
+only non-zero values.
+For BERTopic, the texts were converted into embeddings using the PORTULAN/serafim335m-portuguese-pt-sentence-encoder-ir transformer [13]. This encoder was chosen for its superior performance in Semantic Text Similarity (STS) and Information Retrieval (IR) in Brazilian Portuguese due to its Sentence Encoder structure,
+which is capable of capturing the deep context of the documents while handling
+informality and syntactic noise.
+3.4
+
+Data Mining
+
+The Mining stage is divided into two complementary subsections: the first one
+presents and justifies the algorithms selected for topic modeling, while the second
+one details the strategy for defining the number of topics for the models (k).
+Topic modeling For the topic modeling stage, four distinct algorithms were
+selected: LSA, LDA, NMF and BERTopic. The selection of these algorithms was
+justified by the need to analyze the corpus under different premises, ensuring a
+complementary extraction of students perceptions. The LSA [9], which applies
+Singular Value Decomposition (SVD) to the TF-IDF matrix, was chosen to establish an algorithmic baseline, mapping the global co-occurrence correlations of
+
+6
+
+Anonymous Author(s)
+
+terms in the evaluations. LDA [3], by its probabilistic nature, was adopted under the principle that a document belongs to several topics, and it uses Bayesian
+inference to estimate these latent distributions.
+NMF, by factoring the non-negative sparse TF-IDF matrix into smaller matrices, was selected by its ability to generate additive representations, forcing the
+separation of themes into clear semantic boundaries. Finally, BERTopic [15] was
+picked to represent the neural counterpoint of the analysis, dealing with informality and syntactic complexity of the documents by capturing deep semantic
+similarity through embeddings. The outputs of all topics models are avaliable in
+Github’s project repository2 .
+Defining k topics number A crucial step in modeling is defining the number of topics (k) to be extracted by the models, which determines the analysis
+granularity: low values gerenate generalist themes, while high values excessively
+fragment the subjects. Although related studies employ metrics that aim to mitigate the subjectivity of this choice, they do not always guarantee the quality of
+the topics generated, since high statistical consistency is not necessarily synonymous with high human interpretability [7].
+For this research, a hybrid strategy was adopted to define k for each model.
+Initially, the coherence metric (Cv ) was used, which evaluates semantic interpretability by measuring the degree of confirmation between the most representative words of each grouping [25]. In addition, the Inverted Rank-Biased Overlap (IRBO) topic diversity, an adaptation of the Rank-Biased Overlap (RBO)
+metric [29], was applied to assess the distinctness and non-redundance among
+the generated themes [2]. This combined analysis, along with qualitative human
+inspection, aimed to ensure the relevance and interpretability of the results. The
+results obtained with this approach are discussed in the Subsection 4.1.
+3.5
+
+Interpretation and Evaluation
+
+The final stage of the KDD Interpretation and Evaluation process was divided
+into two phases: a qualitative comparative analysis of the results generated by
+the modeling algorithms and the automatic labeling of the clusters via LLM.
+Qualitative comparative analysis The qualitative comparative analysis consisted of inter-model topic alignment, which aimed to map convergences (common topics) that emerge in all models due to their high relevance in the corpus,
+and singularities (exclusive topics) captured by only one of the techniques. For
+the analysis, a hybrid approach based on [18] was adopted, combining topic
+alignment with the evaluation of semantic interpretability.
+The steps of the process, detailed in Figure 2, were as follows: (1) Vector
+Representation: the 15 keywords from each topic were converted into embeddings via the PORTULAN/serafim-335m model, calculating the centroid (vector
+2
+
+https://anonymous.4open.science/r/student_perceptions_analysis_
+BRACIS-EA48/
+
+AI-Powered Topic Modeling for Institutional Student Feedback Analysis
+
+7
+
+mean) of the resulting lists; (2) Similarity Matrix: all-to-all cosine similarity
+was applied to quantify semantic proximities and latent inter-model connections based on the cosine of the angle formed between them [26]; (3) Cutoff
+Threshold: a sensitivity analysis was performed between 0.8 and 0.95, in which
+experiments indicated that thresholds close to 0.8 merged distinct topics, while
+values close to 0.95 fragmented equivalent themes. Thus, the threshold was set
+at 0.94 to ensure semantic cohesion and the correct identification of analogous
+topics; (4) Similarity Graph: based on network analysis methodologies [23], an
+undirected graph was constructed where edges connect nodes (topics) whose similarity exceeds the defined threshold, enabling the identification of cross-model
+and exclusive topics; (5) Community Detection: the Louvain algorithm [4]
+was applied to group densely connected nodes, highlighting common topics across
+models and isolating exclusive ones.
+
+1. TOPICS VECTOR
+REPRESENTATION (EMBEDDINGS)
+
+LSA
+
+2. SIMILARITY MATRIX
+
+4. SIMILARITY GRAPH
+
+[0,77; 0,80]
+
+Tn...
+
+3. THRESHOLDING
+DEFINITION
+
+...
+
+Tn...
+
+...
+
+LDA
+Tn...
+
+[0,11; 0,14]
+...
+
+...
+
+NMF
+
+> 0.94
+
+LSA
+Tn...
+
+Tn...
+
+Tn...
+
+[-0,56; 0,68]
+
+Community 1:
+common topics
+
+LDA
+
+LSA
+
+Tn...
+
+Tn...
+
+Tn...
+
+NMF
+Tn...
+
+BERTopic
+Tn...
+
+NMF
+Tn...
+
+Tn...
+
+...
+
+Tn...
+
+5. COMMUNITIES DETECTION WITH
+LOUVAIN ALGORITHM
+
+LDA
+Tn...
+
+Community 2:
+exclusive topics
+
+BERTopic
+Tn...
+
+...
+Tn...
+
+[0,66; -0,58]
+
+...
+
+BERTopic
+
+...
+
+...
+
+...
+
+...
+
+Tn...
+
+Fig. 2. Steps in the process of inter-model topic alignment.
+
+Automatic topic labeling To mitigate the subjectivity and cognitive load inherent in the manual interpretation of topics generated by modeling algorithms,
+an automatic labeling pipeline based on Generative Artificial Intelligence was
+implemented. For this task, the pre-trained model Llama-3.1-8B-Instruct-Meta
+was used. The choice of model was justified by its open-weight architecture,
+offering interpretive capabilities and viable computational cost. Its 8 billion parameters enable efficient local execution, enhanced by support for GGUF quantization for CPU’s. Furthermore, the Instruct variant meets the requirement of
+following complex prompt constraints. Despite its multilingual base, the model
+offers robust training and consolidated support for the specificities of Brazilian
+Portuguese.
+The automated labeling process begins with the data entry stage, where
+keywords and representative documents are incorporated. Following this, Prompt
+Engineering techniques were applied, such as defining a Persona, imposing strict
+guidelines (System Instructions), and the Zero-Shot approach. The complete
+prompt structure is available in the project’s repository on GitHub. Finally, the
+model processed the provided context to generate a short, descriptive label. The
+results of this labeling can be seen in Section 4.3.
+
+8
+
+Anonymous Author(s)
+
+4
+
+Results and dicussions
+
+The presentation of the results begins with the definition of the number of topics
+(k), followed by the inter-model comparative analysis and concluding with automatic semantic labeling via LLM. Since the original dataset consists of texts
+in Portuguese, all generated keywords and labels presented in this section have
+been translated into English by the authors to facilitate understanding.
+4.1
+
+Topic granularity (k) definition
+
+Initially, the search range was limited to k ∈ [2, 25], seeking a balance between
+granularity and the practical usefulness of the topics. Empirically, the defined
+limit of k = 25 aims to fit the analyzed corpus, preventing an excessive number
+from fragmenting similar themes into multiples topics with subtle differences.
+This restriction aligns with the central objective of producing interpretable semantic diagnoses to support institutional analysis, since an excessive number of
+groupings would increase the cognitive load on managers during the analysis,
+compromising the synthesis provided by the modeling.
+Preliminary coherence analysis in Figure 3 showed that the LSA, LDA,
+and BERTopic models tended to maximize their scores at very low granularity (k ∈ {2, 3}). However, such general groupings, although mathematically cohesive, offer low managerial utility because they do not discriminate specific
+operational nuances. Given this limitation, the IRBO diversity metric was used
+as a criterion to explore higher granularities.
+Coherence (Cv) score per model and topics number
+
+0.500
+0.475
+
+0.9
+Topic diversity (IRBO) score
+
+Coherence score (Cv)
+
+0.450
+0.425
+0.400
+0.375
+0.350
+
+Topic diversity (IRBO) score per model and topics number
+
+1.0
+
+Model
+LSA
+LDA
+NMF
+BERTopic
+
+0.8
+
+0.7
+
+Model
+LSA
+LDA
+NMF
+BERTopic
+
+0.6
+
+0.325
+0.300
+
+2
+
+3
+
+4
+
+5
+
+6
+
+7
+
+8
+
+9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+Topics number
+
+Fig. 3. Coherence (Cv ) analysis for different values of k per model.
+
+0.5
+
+2
+
+3
+
+4
+
+5
+
+6
+
+7
+
+8
+
+9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+Topics number
+
+Fig. 4. Topic diversity analysis (IRBO)
+for different values of k per model.
+
+Figure 4 shows that the four models exhibit stability in the metric at k = 11,
+indicating that the increase in the number of topics did not result in semantic
+redundancy detectable by the metric. Based on the scores obtained in the two
+metrics, the window of analytical interest was defined as the interval 11 ≤ k ≤
+25. Within the established window, the value of k that maximized coherence
+was selected, respecting the specificities of each algorithm. The results indicated
+
+AI-Powered Topic Modeling for Institutional Student Feedback Analysis
+
+9
+
+k = 13 as the ideal point for the LDA and NMF models, k = 25 for the LSA,
+and k = 14 for the BERTopic.
+
+4.2
+
+Qualitative comparative analysis inter-model
+
+This subsection presents a qualitative comparative analysis between the four
+models, with the aim of highlighting the convergences and divergences in the
+identified thematic structures.
+
+Common topics Common topics are those whose relevance in the corpus is
+so significant that they consistently emerge across all approaches, regardless of
+the model technique. As a result of community detection using the Louvain
+algorithm, three Super-Topics were identified, characterized by strong internal
+cohesion where the four models converged with cosine similarity equal to or
+greater than the threshold of 0.94.
+In the identified communities, there was the presence of more than one topic
+belonging to the same model, as illustrated in Figure 5. To facilitate the interpretation of the results, the node with the highest degree was adopted as
+the representative of the model in each community, since its high connectivity
+reflects greater semantic proximity to the other topics, consolidating it as the
+central point of convergence of the identified concept.
+Super-Topic 0: 20 topics
+NMF_Topic_4
+
+NMF_Topic_9
+
+LSA_Topic_5
+
+Super-Topic 2: 15 topics
+LDA_Topic_0
+
+Super-Topic 3: 15 topics
+
+LSA_Topic_20
+
+LSA_Topic_17
+LSA_Topic_23
+
+NMF_Topic_1
+
+NMF_Topic_6
+NMF_Topic_2
+
+LDA_Topic_7
+LSA_Topic_15
+LSA_Topic_0
+LSA_Topic_6
+LDA_Topic_1 LSA_Topic_21
+LSA_Topic_4
+LSA_Topic_8 LSA_Topic_1
+LSA_Topic_7
+LSA_Topic_2
+LSA_Topic_13LSA_Topic_11
+LSA_Topic_10
+BERTopic_Topic_0
+LDA_Topic_2
+LSA_Topic_24
+LSA_Topic_12
+LSA_Topic_9 LDA_Topic_12
+LDA_Topic_11
+NMF_Topic_7
+LSA_Topic_3
+
+LSA_Topic_22
+LDA_Topic_3
+LSA_Topic_18
+LSA_Topic_16
+
+BERTopic_Topic_3
+BERTopic_Topic_1
+
+NMF_Topic_10
+
+NMF_Topic_3
+
+LSA_Topic_14
+LDA_Topic_8
+
+LDA_Topic_4
+LDA_Topic_6
+
+NMF_Topic_11
+
+NMF_Topic_0LDA_Topic_10
+LDA_Topic_9
+
+LDA_Topic_5
+
+Fig. 5. Inter-model Super-Topics identified using the Louvain algorithm.
+
+In the Table 1 presented, Super-Topic 0 reflects a consensus regarding didactics and content transmission. It is observed that the LSA (1) and LDA (7)
+models prioritized generic action verbs, which suggests that these models capture the most frequent latent structure of the corpus, but with less qualitative
+specificity. In contrast, the NMF (4) isolated granular teaching adjectives, highlighting a more nuanced view of student perception. The BERTopic, in turn,
+although presenting lexical redundancies, grouped terms that evidence the objective pedagogical dynamics (0).
+
+10
+
+Anonymous Author(s)
+
+Table 1. Super-Topics and their respective topics extracted by the evaluated models.
+Super-Topic LSA
+LDA
+NMF
+BERTopic
+0
+(1) excellent, good, (7) subject, do, al- (4) well, explain, (0) excellent, aldidactic,
+explain, ways, well, explain, teach, subject, inter- ways, great, good,
+subject,
+teach, class,
+material, act, educate, know, didactic,
+excelcontent, great, dis- great, interest, are, master, understand, lent, good, doubts,
+cipline, good, pass, talk, take, time, con, lecture, rea- subject,
+explains,
+test, know, class, teach, didactic
+soning, wonderful, content,
+about,
+miss
+quite, efficient
+super, objective
+2
+(21) semester, mas- (1)
+class,
+leave, (7) domain, subject, (3) domain, subject,
+ter, well, wonderful, semester,
+work, content,
+about, content, quite, day,
+to
+lack,
+about, teach,
+subject, enough,
+matter, about, well, passes,
+form, to dedicate, some, topic, room, discipline, to teach, knowledge, taught,
+difficult, to explain, content, can, give, Portuguese, to con- area, subjects, new,
+to administer, to class, do, knowledge textualize, to teach, contextualized, exteach, commentary,
+to deal with, form, cellent
+subject, class
+clear, high
+3
+(14) class, teach, (8) subject, form, (0) class, for, test, (1) content, test,
+always,
+attentive, class, teach, mate- content, to do, sub- room,
+evaluation,
+classroom, teaching rial, because, can, ject, work, evalua- besides,
+tests,
+methods, comment, do, student, man- tion, semester, little, passed,
+teaching,
+general, student, to ner, some, clear, dis- to leave, form, to be lack, little, only,
+be absent, to help, cipline, only, evalua- able to, to achieve, assignments, teachmethod, test, to tion
+to have
+ing methods, time,
+explain, willing
+times
+
+In Super-Topic 2, focused on the teacher’s domain of content, the grouping
+generated by LSA resulted in mixed feelings on the same topic (21). This behavior can be attributed to its difficulty in distinguishing fine semantic contexts in
+reduced-dimensionality spaces. LDA (1) showed sensitivity to the transformation
+stage of the corpus, presenting lexical variations such as “aula” and “aulo” (in
+portuguese), which reflects the impact of lemmatization in probabilistic models.
+On the other hand, NMF and BERTopic captured terms focused on the applicability of the knowledge taught, which suggests that matrix factorization and
+embeddings were able to highlight the student’s perspective regarding competencies that go beyond simple technical mastery.
+Finally, in Super-Topic 3, which focuses on the evaluation process, LSA (14)
+and LDA (8) still maintain a strong overlap in vocabulary that encompasses the
+didactic dimension, diluting the specific focus on evaluation. In contrast, NMF
+(0) and BERTopic (1) isolated the evaluative aspect by focusing on concrete
+terms such as “test”, “assignments” and “content”. Given the results presented in
+the analysis of common topics, it is suggested that NMF and BERTopic captured
+more granular aspects compared to the LSA and LDA models, highlighting more
+precise terms and making explicit the emerging theme in the topics.
+Exclusive topics In the context of this research, exclusive topics are defined
+as clusters that did not show cosine similarity equal to or above the threshold of
+0.94 with any other topic generated by the other models. The objective of this
+analysis is to verify if the models can extract thematic niches ignored by the other
+algorithms. Although they have lower recurrence in the corpus, these exclusive
+topics can reveal critical issues that require managerial attention and immediate
+action. Table 2 presents the topics found and their respective algorithms.
+
+AI-Powered Topic Modeling for Institutional Student Feedback Analysis
+
+11
+
+Table 2. Exclusive topics extracted by BERTopic and NMF.
+Model
+NMF
+
+Keywords
+(8) didaticar, ruim, fraco, possuir, atencao, objetiva, corrida, incrivel, ponto, objetivo,
+parabem, abordar, pessimo, paciencia, abordagem
+(12) faltar, aulo, sala, comunicacao, experiencia, avisar, pontual, dentro, visto, de
+aquilo, dificilmente, apresentar, questoes, pessoal, compromisso
+BERTopic (2) horario, vezes, motivos, alguns, tempo, muitas, demais, faltou, rapido, onibus,
+noite, trabalho, muitos, pontual, sao
+(4) didatica, pouco, excelente, intransigente, finge, didatico, desorganizado, pessima,
+pontos, extremamente, sabe, bastante, irreais, ne, explosivo
+(6) avaliacao, avaliacoes, poderia, correcao, claro, corrigidas, incluido, discursivas,
+metodo, confusa, apenas, deixou, en, provas, formas
+(8) nada, aderiu, consta, declarar, chega, nen, ocorreu, cedo, erro, social, nome, momento, avaliar, fez, nota
+(9) profissional, ok, impecaveis, qualifiquado, divertido, xxxxxxxxxxxx, regular, maravilhoso, maravilhosa, presente, objetivo, nome, senhor, bom, horrivel
+(10) comentarios, ofensivos, comentario, lidos, comentar, serao, positivos, negativos,
+desnecessarios, nunca, outra, tanto, nada, hora, ”
+(11) melhorar, precisa, deixar, didatica, experiencia, interesse, amor, atrair, ganhe,
+ramo, jeito, interresante, evolua, exforcou, conteudista
+(12) sexo, comentarios, sexuais, ex, sexual, desnecessarios, abordava, faz,
+sobre, abuso, acerca, certos, aproximacao, exigindo, individuo
+(13) slides, portugues, completo, tarefas, dominio, explicavamos, influenciou, portugol,
+transporte, portuguesa, mandar, gastariamos, entregava, correta, perguntava
+
+The critical highlight in the analysis was BERTopic’s unique ability to identify institutional risks by extracting terms such as “ofensivos”, “desnecessarios”
+(10), “sexo” e “sexuais” (12). By grouping terms by semantic proximity, the model
+prevented sensitive comments, which were infrequent in the dataset, from being
+overlooked. In models that rely on the frequency and co-occurrence of terms,
+these rare events were likely diluted into generic topics of dissatisfaction or ignored, given their low statistical representativeness.
+Furthermore, BERTopic extracted niches of dissatisfaction related to the
+teaching profile (4), although it is noteworthy that the same topic mixes feelings
+by presenting “excelente” and “pessima” in the same grouping. This coexistence
+of positive and negative terms within the same topic indicates an inherent characteristic of student feedback, where perception can be multifaceted, addressing
+various feelings, although related to the same subject. The model also captured
+external factors that reflect the student’s daily life (2), revealing logistical and
+routine concerns that affect the academic experience. The presence of terms
+with empty strings in topic 10 is due to the exhaustion of statistically relevant
+terms in the vocabulary for its construction, a behavior that is expected and
+results from the removal of stopwords combined with the MMR lexical diversity
+technique implemented.
+On the other hand, the NMF presented two unique topics that offer complementary analyses. Terms such as “didaticar”, “ruim”, “fraco” e “incrivel” (8),
+reflect aspects related to the didactic approach and the quality of teaching, which
+also mixes the polarity of feelings. This characteristic of grouping opposite polarities may be a common property in models that are not explicitly trained for
+sentiment analysis. In its second topic (12), the algorithm points to factors of
+
+12
+
+Anonymous Author(s)
+
+attendance and teacher communication, crucial aspects for academic management.
+In summary, it is noted that BERTopic presented more topics addressing
+rare and critical events, such as sensitive comments, which are extremely important for institutional management. Its embedding-based approach allows lowfrequency terms not to be diluted among the other groupings. For management
+use, the embedding-based model proves suitable for highlighting comments that
+address sensitive topics and inappropriate professional behaviors without them
+being masked by the large volume of praise and criticism present in AVALIA.
+4.3
+
+Automatic generative topic labeling
+
+Previous discussions and a review of the literature have shown that, although
+topic modeling algorithms automate text clustering, the semantic interpretation
+of these groups remains dependent on human curation. Therefore, this subsection employs generative automatic labeling with LLM as a support for the interpretability of generated topics, aiming to mitigate the overload of manual
+inspection and provide diagnoses that support evaluation and decision-making
+by academic managers. For the labeling stage, BERTopic was chosen to provide
+the input data, a decision based on the interpretability of its results during the
+modeling phase. The algorithm demonstrated a balance between coherence and
+diversity, in addition to concentrating dominant themes with little lexical overlap
+and isolating critical institutional niches.
+With the goal of instructing the Llama-3.1 model in labeling, the construction
+of the prompt used was structured to enhance the LLM’s interpretive capacity.
+For data input, two variables were incorporated: i) Keywords: 15 terms representative of the extracted topic that synthesize the central content and act as
+the semantic core of the grouping; and ii) Representative Documents: top
+3 comments that, in the context of the research, best exemplify the extracted
+topic. The inclusion of these representative documents aims to mitigate ambiguities that isolated keywords would not resolve.
+Table 3 highlights the most relevant of the 14 LLM-generated topics, while the
+complete list is available on GitHub. Notably, the labels “Comentários Desnecessários
+e Ofensivos” (10) and “Comentários Sexuais Desnecessários em Sala de Aula”
+(12) demonstrate the model’s sensitivity and inferential capacity. A key aspect
+of this result was the LLM’s fidelity to the data, as it avoided premature legal
+terminology (e.g “harassment”) without explicit textual evidence. This behavior is crucial to prevent the automated classification of serious offenses without
+factual support, thereby ensuring an ethical and accurate institutional analysis.
+In addition, LLM demonstrated skill in handling context and noise in the
+data. In the label “Semestre Complicado por Falta de Comunicação e Greve”
+(5), the “greve” aspect highlighted in the keywords remained explicit in the
+topic labeling, combining this factor with communication difficulties. In the label
+“Descontentamento com Ausência de Informações” (8), the noise in the data is
+evident by reflecting the cluster formed by comments such as “nada a declarar”
+in the modeling phase.
+
+AI-Powered Topic Modeling for Institutional Student Feedback Analysis
+
+13
+
+Table 3. LLM-generated semantic labels for the identified topics.
+LLM-Generated Label
+Professor Excelente
+
+Keywords
+(0) excelente, sempre, otimo, bem, boa, didatica, otima, bom,
+duvidas, assunto, explica, conteudo, sobre, super, objetiva
+Semestre Complicado por Falta de (5) disciplinas, alguns, bom, dificuldades, apesar, greve,
+Comunicação e Greve
+proveitoso, sinceramente, otimos, materias, repassar, apos,
+vez, geral, infelizmente
+Descontentamento com Ausência de (8) nada, aderiu, consta, declarar, chega, nen, ocorreu, cedo,
+Informações
+erro, social, nome, momento, avaliar, fez, nota
+Comentários Desnecessários e Ofen- (10) comentarios, ofensivos, comentario, lidos, comentar,
+sivos
+serao, positivos, negativos, desnecessarios, nunca, outra,
+tanto, nada, hora, ”
+Comentários Sexuais Desnecessários (12) sexo, comentarios, sexuais, ex, sexual, desnecessarios,
+em Sala de Aula
+abordava, faz, sobre, abuso, acerca, certos, aproximacao,
+exigindo, individuo
+
+Overall, the other labels generated are divided between praise and criticism of
+the teacher. The criticisms address lack of respect (1), infrastructure and logistics
+problems (2), disorganized (4) and inefficient (11 and 13) teaching methods, and
+opposition to the evaluation method (6). The praises address the same axes of
+teaching methods (0), mastery (3) and teacher profile (7), and class dynamics (9).
+Considering the results generated, it is suggested that, in addition to categorizing
+the subjects, the labeling interpreted the students’ intentionality by covering
+the spectrum of evaluation, which offers a potential diagnosis for educational
+management.
+
+5
+
+Considerations
+
+This study validated the integration between topic modeling and labeling via
+LLM for the analysis of the current repository, demonstrating that the combined application of these techniques was able to produce interpretable themes
+and useful semantic labels to support institutional analysis. In the comparative
+analysis, BERTopic excelled in forming cohesive clusters and detecting critical
+themes, such as unethical conduct and sexual comments, which were diluted by
+frequency-based approaches due to noise and lexical overlap. However, among the
+classical algorithms, NMF demonstrated a punctual capacity to capture qualitative and behavioral aspects of teaching. Furthermore, the identification of
+Super-Topics validated the central pillars of student evaluation via inter-model
+consensus, showing that the structural problems detected were not artifacts of
+a single algorithm.
+The methodological difference in this study lay in the integration of LLM
+for the interpretation of the results. The use of the Llama model proved to
+be an appropriate approach to support the labeling of the clusters. More than
+just synthesizing themes, LLM demonstrated ethical and contextual sensitivity when dealing with sensitive topics, avoiding premature legal terminology
+and interpreting the intentionality behind noise. Practically, this approach provides a data-driven tool to monitor teaching quality, transforming bureaucratic
+self-evaluation into a continuous improvement engine. Limitations include the
+
+14
+
+Anonymous Author(s)
+
+computational cost of processing neural models. Future work suggests exploring
+Retrieval-Augmented Generation (RAG) to create interactive virtual assistants,
+democratizing access to institutional intelligence via natural language queries.
+Code Availability The experimental code and results can be founded at https:
+//anonymous.4open.science/r/student_perceptions_analysis_BRACIS-EA48/.
+Acknowledgments. The authors acknowledge the use of LLM for linguistic refinement, taking full responsibility for the final content.
+
+References
+1. Almeida, T.B.M.: Identificação e interpretação de debates feministas no Instagram brasileiro: uma abordagem com BERTopic e LLaMA. Trabalho de Conclusão de Curso, Universidade Federal de Alagoas, Maceió (2024). http://www.
+repositorio.ufal.br/jspui/handle/123456789/16466
+2. Bianchi, F., Terragni, S., Hovy, D.: Pre-training is a Hot Topic: Contextualized
+Document Embeddings Improve Topic Coherence. In: Zong, C., Xia, F., Li, W.,
+Navigli, R. (eds.) ACL-IJCNLP 2021, vol. 2, pp. 759–766. Association for Computational Linguistics (2021). https://doi.org/10.18653/v1/2021.acl-short.96
+3. Blei, D.M., Ng, A.Y., Jordan, M.I.: Latent dirichlet allocation. Journal of Machine
+Learning Research 3, 993–1022 (2003)
+4. Blondel, V.D., Guillaume, J.-L., Lambiotte, R., Lefebvre, E.: Fast unfolding of
+communities in large networks. Journal of Statistical Mechanics: Theory and Experiment 2008(10), P10008 (2008)
+5. Brasil: Lei n. 10.861, de 14 de abril de 2004. Institui o Sistema Nacional
+de Avaliação da Educação Superior – SINAES. Diário Oficial da União,
+Brasília, DF (2004). https://www.planalto.gov.br/ccivil_03/_ato2004-2006/
+2004/lei/l10.861.htm
+6. Cardoso, M.S., d’Albuquerque, R.W., Tomás, M.C.: A Autoavaliação institutional
+Numa Instituição De Ensino Superior Comunitária E Seu Potencial De Uso Para
+Gestão Universitária. Regae: Revista de Gestão e Avaliação Educacional 11, e69550
+(2022). https://doi.org/10.5902/2318133869550
+7. Chang, J., Gerrish, S., Wang, C., Boyd-graber, J., Blei, D.: Reading Tea Leaves:
+How Humans Interpret Topic Models. In: Bengio, Y., Schuurmans, D., Lafferty,
+J., Williams, C., Culotta, A. (eds.) Advances in Neural Information Processing
+Systems, vol. 22. Curran Associates, Inc. (2009)
+8. de Sousa, J.V., Griboski, C.M., Gumesson, D.W.B.: Autoavaliação institutional no
+marco do Sinaes: movimentos e tensões no uso dos resultados para a qualidade da
+educação superior. Revista Cocar 29 (2024)
+9. Deerwester, S., Dumais, S.T., Furnas, G.W., Landauer, T.K., Harshman, R.: Indexing by latent semantic analysis. Journal of the American Society for Information
+Science 41(6), 391–407 (1990)
+10. Dieng, Adji B., Ruiz, F.J.R., Blei, D.M.: Topic Modeling in Embedding Spaces.
+Transactions of the Association for Computational Linguistics 8, 439–453 (2020).
+https://doi.org/10.1162/tacl_a_00325
+11. Fayyad, U., Piatetsky-Shapiro, G., Smyth, P.: From Data Mining to Knowledge
+Discovery in Databases. AI Magazine 17(3), 37 (1996). https://doi.org/10.
+1609/aimag.v17i3.1230
+
+AI-Powered Topic Modeling for Institutional Student Feedback Analysis
+
+15
+
+12. Ferreira, L.S., et al.: Autoavaliação institutional no ensino superior: Percepções
+sobre o Avalia-Graduação no curso de pedagogia do campus Bragança-UFPA.
+ARACÊ 7(11), e10034 (2025). https://doi.org/10.56238/arev7n11-183
+13. Gomes, L., et al.: Open Sentence Embeddings for Portuguese with the Serafim PT*
+encoders family. arXiv:2407.19527 (2024)
+14. Gresele, W.D., Barbosa, A.A., Urdan, A.T., Cunha, J.A.C.: Estudo bibliométrico
+sobre transformação digital e sustentabilidade no ensino superior. Revista de
+Gestão e Secretariado (2024)
+15. Grootendorst, M.: BERTopic: Neural topic modeling with a class-based TF-IDF
+procedure. arXiv:2203.05794 (2022)
+16. Hammami, E., Faiz, R.: Text Clustering based on Multi-View Representations. In:
+Proceedings of CIRCLE (2022)
+17. Hayat, F., Shatnawi, S., Haig, E.: Comparative Analysis of Topic Modelling Approaches on Student Feedback. In: Proceedings of the 16th International Conference on Computer Supported Education, pp. 226–233 (2024). https://doi.org/
+10.5220/0012890400003838
+18. Kafiabad, S.T., Schiffauerova, A., Ebadi, A.: Decoding Funded Research: Comparative Analysis of Topic Models and Uncovering the Effect of Gender and Geographic
+Location. arXiv:2510.18803 (2025)
+19. Kardam, N., Makhsous, S.: A Comparative Analysis of Natural Language Processing Techniques for Analyzing Student Feedback about TA Support. In: 2024 ASEE
+Annual Conference (2024)
+20. Kardam, N., Wilson, D.: A Hybrid Approach to Natural Language Processing
+for Analyzing Student Feedback about Faculty Support. In: 2024 ASEE Annual
+Conference (2024). https://doi.org/10.18260/1-2--46447
+21. Khandelwal, T.: Using LLM-Based Approaches to Enhance and Automate Topic
+Labeling. arXiv:2502.18469 (2025)
+22. Lee, D.D., Seung, H.S.: Learning the parts of objects by non-negative matrix factorization. Nature 401(6755), 788–791 (1999)
+23. Myftaraj, E., Fata, Irena, Plasari, E.: A Topic Modeling Analysis of Circular Economy and Big Data Research Using BERTopic and SciBERT. International Journal
+of Innovative Technology and Interdisciplinary Sciences 8(4), 1195–1243 (2025)
+24. Pereira, V., Basilio, M.P., Santos, C.H.T.: PyBibX – a Python library for bibliometric and scientometric analysis powered with artificial intelligence tools. Data
+Technologies and Applications 59(2), 302–337 (2025). https://doi.org/10.1108/
+dta-08-2023-0461
+25. Röder, M., Both, A., Hinneburg, A.: Exploring the space of topic coherence measures. In: Proceedings of the 8th ACM WSDM, pp. 399–408 (2015)
+26. Salton, G., Wong, A., Yang, C.-S.: A vector space model for automatic indexing.
+Communications of the ACM 18(11), 613–620 (1975)
+27. Siqueira, T.D.A., Marques, N.R.P.C., et al.: Autoavaliação institutional nas universidades brasileiras. BIUS-Boletim Informativo Unimotrisaude em Sociogerontologia
+51(45), 1–19 (2025)
+28. Wanna, S., et al.: TopicTag: Automatic Annotation of NMF Topic Models Using
+Chain of Thought and Prompt Tuning with LLMs. In: Proceedings of the ACM
+Symposium on Document Engineering 2024, art. 8. ACM, New York (2024). https:
+//doi.org/10.1145/3685650.3685667
+29. Webber, W., Moffat, A., Zobel, J.: A similarity measure for indefinite rankings.
+ACM Transactions on Information Systems 28(4), 1–38 (2010)
+
+16
+
+Anonymous Author(s)
+
+30. Zankadi, H., Idrissi, A., Daoudi, N., Hilal, I.: Identifying learners’ topical interests
+from social media content to enrich their course preferences in MOOCs using topic
+modeling and NLP techniques. Education and Information Technologies 28(5),
+5567–5584 (2022). https://doi.org/10.1007/s10639-022-11373-1
+
+
