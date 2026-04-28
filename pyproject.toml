@@ -39,25 +39,22 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-# Define o tamanho máximo da linha (padrão do Black/Ruff é 88)
 line-length = 100
 [tool.ruff.lint]
-# Habilita conjuntos de regras muito rigorosas:
 select = [
-    "E",   # pycodestyle (Erros de estilo)
-    "W",   # pycodestyle (Avisos de estilo)
-    "F",   # pyflakes (Erros lógicos como variáveis não usadas)
-    "I",   # isort (Organiza automaticamente as importações)
-    "N",   # pep8-naming (Força padrões de nomes PEP-8 para variáveis/funções)
-    "B",   # flake8-bugbear (Pega bugs comuns e armadilhas do Python)
-    "UP",  # pyupgrade (Força você a usar a sintaxe mais atual do Python)
-    "SIM", # flake8-simplify (Dicas para simplificar e limpar o código)
-    "C90", # mccabe (Checa a complexidade do código - muito ifs e loops)
-    "PT",  # flake8-pytest-style (Se for usar pytest no futuro)
-    "RET", # flake8-return (Boas práticas de uso do return)
+    "E",   # pycodestyle
+    "W",   # pycodestyle 
+    "F",   # pyflakes 
+    "I",   # isort 
+    "N",   # pep8-naming
+    "B",   # flake8-bugbear 
+    "UP",  # pyupgrade 
+    "SIM", # flake8-simplify 
+    "C90", # mccabe 
+    "PT",  # flake8-pytest-style 
+    "RET", # flake8-return 
 ]
-# Regras que você prefere ignorar caso sejam rigorosas até demais
+
 ignore = []
 [tool.ruff.lint.mccabe]
-# Opcional: Define a complexidade máxima aceitável nas funções (padrão é 10)
 max-complexity = 10
