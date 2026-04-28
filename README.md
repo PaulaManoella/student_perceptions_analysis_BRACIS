@@ -1,17 +1,30 @@
-# Student Perceptions Analysis through Topic Modeling
+# Analyzing Student Perceptions in Course Evaluation: A Hybrid Approach Using Topic Modeling and LLM-Based Automatic Labeling
 
-This repository contains the source code and supplementary materials for the research paper submitted to the **Brazilian Conference on Intelligent Systems (BRACIS)**. The study applies multiple topic modeling algorithms to qualitative student feedback collected from the *Avalia UFPA* institutional evaluation system at the Federal University of Pará (UFPA), Brazil.
+This repository contains the source code and supplementary materials for the research paper submitted to the **Brazilian Conference on Intelligent Systems (BRACIS)**. The study applies multiple topic modeling algorithms to qualitative student feedback integrated with large language model (LLM) based automatic labeling.
 
 ## Overview
 
-The goal of this project is to identify and analyze the latent thematic structures within student perceptions of teaching quality. We employ four topic modeling algorithms — **LSA**, **LDA**, **NMF**, and **BERTopic** — and conduct a qualitative inter-model comparative analysis to identify both cross-model recurring themes and model-specific exclusive clusters. Additionally, we leverage the **Llama 3.1 LLM** for automatic generative topic labeling on the BERTopic results.
+The goal of this project is to identify and analyze the latent thematic structures within student perceptions. We employ four topic modeling algorithms — **LSA**, **LDA**, **NMF**, and **BERTopic** — and conduct a qualitative inter-model comparative analysis to identify both cross-model recurring themes and model-specific exclusive clusters. Additionally, we leverage the **Llama 3.1 LLM** for automatic generative topic labeling.
+
+## Results and Discussion Notebook
+
+A dedicated Jupyter Notebook is provided for the comprehensive presentation and analysis of all results:
+
+> **[`notebook/results_and_discussion.ipynb`](notebook/results_and_discussion.ipynb)**
+
+This notebook serves as a self-contained technical report that consolidates all pipeline outputs, including:
+
+- **Coherence and IRBO metric visualizations** for determining the optimal number of topics ($k$).
+- **Topic keyword tables** for each of the four models (LSA, LDA, NMF, BERTopic).
+- **Qualitative inter-model comparative analysis**, featuring common topics identified via Louvain community detection and model-exclusive clusters.
+- **Automatic generative topic labels** produced by the Llama 3.1 LLM for the BERTopic results.
 
 ## Project Structure
 
 ```
 student_perceptions_analysis_BRACIS/
 ├── data/                              # Raw dataset files (not tracked by git)
-│   └── avalia-*.csv / .xlsx           # Institutional evaluation data (multiple semesters)
+│   └── {xxxxxx}-*.csv / .xlsx           # Institutional evaluation data (multiple semesters)
 ├── notebook/
 │   └── results_and_discussion.ipynb   # Results presentation and analysis notebook
 ├── output/
@@ -26,8 +39,7 @@ student_perceptions_analysis_BRACIS/
 │       ├── all_models_topics_en.csv   # Consolidated topics from all models (English)
 │       ├── all_models_topics_pt.csv   # Consolidated topics from all models (Portuguese)
 │       ├── exclusive_topics.csv       # Model-exclusive topics identified
-│       ├── super_topics.csv           # Common topics across models (communities)
-│       └── translate_kws.py           # Keyword translation utility script
+│       └── super_topics.csv           # Common topics across models (communities)
 ├── src/
 │   ├── data/
 │   │   ├── df_bertopic_topics.pkl     # Serialized BERTopic topic results
@@ -37,14 +49,13 @@ student_perceptions_analysis_BRACIS/
 │   ├── data_mining.py                 # Topic modeling algorithms (LSA, LDA, NMF, BERTopic)
 │   ├── evaluation.py                  # Coherence, IRBO, cosine similarity, and Louvain
 │   ├── preprocessing.py               # Text preprocessing and cleaning
-│   ├── selection.py                   # Data filtering (campus, unit, course)
+│   ├── selection.py                   # Data filtering 
 │   ├── transformation.py             # BoW, TF-IDF, dictionary construction
-│   └── utils.py                       # Utility functions (I/O, data wrangling)
+│   └── utils.py                       # Utility functions 
 ├── main.py                            # Main pipeline: preprocessing → topic modeling
 ├── coherence_irbo_evaluation.py       # Coherence and IRBO evaluation across k topics
-├── inter-model_alignment.py           # Inter-model topic alignment via Louvain
+├── inter-model_alignment.py           # Inter-model topic alignment
 ├── LLM_labeling.py                    # Automatic topic labeling with Llama 3.1
-├── concat_files.py                    # Dataset concatenation utility
 ├── pyproject.toml                     # Project dependencies (Poetry)
 ├── poetry.lock                        # Locked dependency versions
 └── README.md
@@ -54,36 +65,39 @@ student_perceptions_analysis_BRACIS/
 
 The analysis is organized into four sequential pipeline stages:
 
-### 1. Topic Modeling (`main.py`)
+### 1. Coherence & IRBO Evaluation (`coherence_irbo_evaluation.py`)
+
+Evaluates each model across a range of $k$ values ($2 \leq k \leq 25$) using:
+- **Coherence (Cv):** Measures the semantic interpretability of discovered topics.
+- **IRBO (Inverted Rank-Biased Overlap):** Measures topic diversity across the model's output.
+
+
+### 2. Topic Modeling (`main.py`)
 
 Executes the full data processing and topic modeling pipeline:
-- Loads and filters the raw dataset by campus, academic unit, and course.
-- Applies text preprocessing (stopword removal, lemmatization, teacher name anonymization).
-- Generates text representations (Dictionary, BoW, TF-IDF).
+- Loads and filters the raw dataset.
+- Applies text preprocessing.
+- Generates text vector representations.
 - Runs four topic modeling algorithms with pre-defined number of topics ($k$):
   - **LSA** ($k = 25$)
   - **LDA** ($k = 13$)
   - **NMF** ($k = 13$)
   - **BERTopic** ($k = 14$)
 
-### 2. Coherence & IRBO Evaluation (`coherence_irbo_evaluation.py`)
-
-Evaluates each model across a range of $k$ values ($2 \leq k \leq 25$) using:
-- **Coherence (Cv):** Measures the semantic interpretability of discovered topics.
-- **IRBO (Inverted Rank-Biased Overlap):** Measures topic diversity across the model's output.
 
 ### 3. Inter-model Alignment (`inter-model_alignment.py`)
 
-Performs a qualitative cross-model comparison:
-- Generates topic vector embeddings using a Portuguese sentence-transformer model.
+Performs a qualitative cross-model analysis:
+- Generates topic vector embeddings using a Portuguese sentence-transformer model (PORTULAN/serafim).
 - Computes pairwise cosine similarity across all topics from all models.
+- Generates a non-directed graph where nodes are topics and edges are cosine similarities.
 - Applies the **Louvain community detection algorithm** to identify common and exclusive topic clusters.
 
 ### 4. Automatic Topic Labeling (`LLM_labeling.py`)
 
 Generates concise, descriptive labels for BERTopic clusters using a local **Llama 3.1 8B** model:
 - Processes each topic's keywords and representative documents.
-- Produces short labels capturing the specific sentiment and theme of each topic.
+- Produces short labels capturing the theme of each topic.
 
 ## Requirements
 
