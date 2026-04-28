@@ -1,6 +1,2 @@
-.history
-.ruff_cache
-.venv
 data/
 __pycache__/
-model/
