@@ -2,7 +2,6 @@
 name = "avalia-analysis"
 package-mode = false
 version = "0.1.0"
-description = "este projeto tem coALIA UFPA"
 authors = ["pmano <pmanoella1@gmail.com>"]
 readme = "README.md"
 
