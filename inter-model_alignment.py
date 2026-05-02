@@ -7,6 +7,7 @@ model. It then constructs a similarity network and extracts topic communities
 across models using the Louvain algorithm
 """
 
+
 # Third-party Imports
 import pandas as pd
 from sentence_transformers import SentenceTransformer
@@ -76,8 +77,46 @@ def run_alignment() -> None:
 
     print(f"\n --- Communities Detected --- \n{df_communities}")
 
-    # for idx, row in df_communities.iterrows():
-    #     print(f"Community {idx}: {', '.join(row['topics'])}")
+    # Generate UMAP 2D projection of all topic vectors across models
+    evaluation.plot_umap_projection(
+        all_topic_vectors,
+        save_path="output/figure/umap_projection.pdf"
+    )
+
+    # Plot the common topic communities (super-topics) as network graphs
+    evaluation.plot_super_topics_network(
+        df_communities,
+        network_graph,
+        min_models_common=4,
+        save_path="output/figure/super_topics.pdf"
+    )
+
+    # ----- Generate Top-3 Most Frequent Topics Table -----
+    # Load document-to-topic assignments generated during modeling (main.py)
+    assignments_by_model = pd.read_pickle('src/data/all_topic_assignments.pkl')
+
+    # Map keyword DataFrames to their corresponding model names
+    keywords_by_model = {
+        "LSA": df_lsa_topics,
+        "LDA": df_lda_topics,
+        "NMF": df_nmf_topics,
+        "BERTopic": df_bertopic_topics,
+    }
+
+    # Reconstruct the full data structure expected by the frequency table function
+    model_topic_data = {
+        model: {
+            "assignments": assignments_by_model[model],
+            "keywords": keywords_by_model[model]
+        }
+        for model in assignments_by_model
+    }
+
+    evaluation.generate_top_n_frequency_table(
+        model_topic_data,
+        top_n=3,
+        save_path="output/topic_modeling/top3_topics_frequency.csv"
+    )
 
 
 if __name__ == "__main__":

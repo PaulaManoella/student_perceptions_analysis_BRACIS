@@ -132,6 +132,7 @@ def run_pipeline() -> None:
     # Start topic modeling with chosen baseline models
     models_to_run = ['lsa', 'lda', 'nmf', 'bertopic']
     all_models_results = {}
+    all_topic_assignments = {}  # Stores dominant topic per document for each model
 
     for model_name in models_to_run:
         print(f"\n=== MODEL {model_name.upper()} ===")
@@ -145,8 +146,12 @@ def run_pipeline() -> None:
             model_topics = utils.get_model_topics(lsa_model)
 
             df_lsa_topics = pd.DataFrame({'keywords': model_topics})
-            df_lsa_topics.to_pickle('src/data/df_lsa_topics.pkl')
+            # df_lsa_topics.to_pickle('src/data/df_lsa_topics.pkl')
             all_models_results['LSA'] = df_lsa_topics
+
+            # Compute dominant topic per document for frequency analysis
+            lsa_assignments = evaluation.get_dominant_topics(lsa_model, tfidf_matrix, model_type="gensim")
+            all_topic_assignments['LSA'] = {'assignments': lsa_assignments, 'keywords': df_lsa_topics}
             print("✅ LSA completed!\n")
 
          # Start LDA model
@@ -159,8 +164,12 @@ def run_pipeline() -> None:
             model_topics = utils.get_model_topics(lda_model)
 
             df_lda_topics = pd.DataFrame({'keywords': model_topics})
-            df_lda_topics.to_pickle('src/data/df_lda_topics.pkl')
+            # df_lda_topics.to_pickle('src/data/df_lda_topics.pkl')
             all_models_results['LDA'] = df_lda_topics
+
+            # Compute dominant topic per document for frequency analysis
+            lda_assignments = evaluation.get_dominant_topics(lda_model, bow_corpus, model_type="gensim")
+            all_topic_assignments['LDA'] = {'assignments': lda_assignments, 'keywords': df_lda_topics}
             print("✅ LDA completed!\n")
 
          # Start NMF model
@@ -168,7 +177,7 @@ def run_pipeline() -> None:
             n_topics = 13
             print(f"--- N TOPICS: {n_topics} ---")
 
-            _, h_matrix = data_mining.NMF_model(n_topics, tfidf_sparse, RANDOM_SEED)
+            w_matrix, h_matrix = data_mining.NMF_model(n_topics, tfidf_sparse, RANDOM_SEED)
 
             feature_names = list(lemmatized_dict.values())
             topic_words = []
@@ -178,8 +187,12 @@ def run_pipeline() -> None:
                 topic_words.append([feature_names[i] for i in top_indices])
 
             df_nmf_topics = pd.DataFrame({'keywords': topic_words})
-            df_nmf_topics.to_pickle('src/data/df_nmf_topics.pkl')
+            # df_nmf_topics.to_pickle('src/data/df_nmf_topics.pkl')
             all_models_results['NMF'] = df_nmf_topics
+
+            # Compute dominant topic per document using the W (document-topic) matrix
+            nmf_assignments = evaluation.get_dominant_topics(w_matrix, corpus=[], model_type="nmf")
+            all_topic_assignments['NMF'] = {'assignments': nmf_assignments, 'keywords': df_nmf_topics}
             print("✅ NMF completed!\n")
 
          # Start BERTopic model
@@ -223,8 +236,14 @@ def run_pipeline() -> None:
                 if len(t_words) >= 2:
                     words_list.append(t_words)
 
-            df_bertopic_results.to_pickle('src/data/df_bertopic_topics.pkl')
+            # df_bertopic_results.to_pickle('src/data/df_bertopikc_topics.pkl')
             all_models_results['BERTopic'] = df_bertopic_results[['keywords']]
+
+            # Use post-outlier-reduction topic assignments for frequency analysis
+            all_topic_assignments['BERTopic'] = {
+                'assignments': new_topics,
+                'keywords': df_bertopic_results[['keywords']]
+            }
             print("✅ BERTopic completed!\n")
 
     # ----- Consolidating and saving all results -----
@@ -236,9 +255,16 @@ def run_pipeline() -> None:
     df_all_topics = pd.concat(all_models_results.values(), ignore_index=True)
 
     # Save as CSV (best for universal access without external Excel packages)
-    df_all_topics.to_csv('output/topic_modeling/all_models_topics.csv', index=False, encoding='utf-8-sig')
+    # df_all_topics.to_csv('output/topic_modeling/all_models_topics.csv', index=False, encoding='utf-8-sig')
 
     print("✅ Consolidated topics saved to all_models_topics.csv!\n")
+
+    # Save dominant topic assignments per model for inter-model frequency analysis
+    assignments_only = {
+        model: data["assignments"] for model, data in all_topic_assignments.items()
+    }
+    pd.to_pickle(assignments_only, 'src/data/all_topic_assignments.pkl')
+    print("✅ Topic assignments saved to all_topic_assignments.pkl!")
 
 
 if __name__ == "__main__":

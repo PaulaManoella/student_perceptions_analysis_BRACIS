@@ -1,0 +1,13 @@
+﻿Model,Freq_Pct,Topic_ID,Keywords
+LSA,16.0,0,"bom, excelente, didaticar, otimo, professora, bem, assunto, aula"
+LSA,6.6,12,"faltar, aulo, sala, disciplina, conteudo, aula, comunicacao, sobre"
+LSA,6.3,18,"prova, disciplina, comentario, passar, poder, claro, tempo, aulo"
+LDA,16.3,11,"excelente, didaticar, disciplina, dominio, conteudo, assunto, bom, sempre"
+LDA,12.5,12,"bom, otimo, didaticar, professora, conteudo, bem, excelente, muito"
+LDA,8.7,6,"prova, aula, passar, explicar, conteudo, trabalho, bem, semestre"
+NMF,23.6,0,"aula, passar, prova, conteudo, fazer, disciplina, trabalho, avaliacao"
+NMF,11.0,12,"faltar, aulo, sala, comunicacao, experiencia, avisar, pontual, dentro"
+NMF,9.5,11,"conhecimento, geral, assunto, ministrar, comentario, amplo, saber, tanto"
+BERTopic,41.9,0,"excelente, didatica, bem, boa, otimo, bom, duvidas, otima"
+BERTopic,38.7,1,"conteudo, prova, didatica, tempo, sala, vezes, falta, alem"
+BERTopic,4.3,2,"avaliacao, provas, avaliacoes, metodo, bem, poderia, eno, desenvolvimento"

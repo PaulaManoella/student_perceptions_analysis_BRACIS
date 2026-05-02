@@ -1,0 +1,13 @@
+Model,Freq_Pct,Topic_ID,Keywords
+LSA,16.0,0,"good, excellent, didactics, great, professor, well, subject, class"
+LSA,6.6,12,"absent, lecture, classroom, course, content, class, communication, about"
+LSA,6.3,18,"exam, course, comment, pass, ability, clear, time, lecture"
+LDA,16.3,11,"excellent, didactics, course, mastery, content, subject, good, always"
+LDA,12.5,12,"good, great, didactics, professor, content, well, excellent, very"
+LDA,8.7,6,"exam, class, pass, explain, content, assignment, well, semester"
+NMF,23.6,0,"class, pass, exam, content, do, course, assignment, assessment"
+NMF,11.0,12,"absent, lecture, classroom, communication, experience, notify, punctual, within"
+NMF,9.5,11,"knowledge, general, subject, teach, comment, broad, know, so much"
+BERTopic,41.9,0,"excellent, didactics, well, good, great, good, doubts, excellent"
+BERTopic,38.7,1,"content, exam, didactics, time, classroom, sometimes, lack, beyond"
+BERTopic,4.3,2,"assessment, exams, evaluations, method, well, could, teaching, development"
