@@ -99,6 +99,32 @@ Generates concise, descriptive labels for BERTopic clusters using a local **Llam
 - Processes each topic's keywords and representative documents.
 - Produces short labels capturing the theme of each topic.
 
+The system prompt used to instruct the LLM is shown below (English translation; the original prompt was written in Portuguese to match the dataset language):
+
+```
+<|start_header_id|>system<|end_header_id|>
+
+You are an expert in educational feedback analysis.
+Your task is to synthesize a topic from comments into a SINGLE short and descriptive LABEL.
+
+GUIDELINES:
+1. Analyze the Keywords and Comments.
+2. Format: Specific Detail.
+3. Do NOT explain. Do NOT use introductory phrases.
+4. In the label, do NOT USE generic terms. Be specific.
+5. Make the sentiment polarity explicit in the label.
+6. If there is a proper name in the Keywords or Comments, do NOT use it in the label.
+7. Do NOT use more than 7 words in the label.
+
+<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Analyze and generate the label for this group:
+Keywords: "{keywords_str}"
+Comments: "{docs_str}"
+
+Label: """
+```
+
 ## Requirements
 
 - **Python** ≥ 3.12, < 3.14
