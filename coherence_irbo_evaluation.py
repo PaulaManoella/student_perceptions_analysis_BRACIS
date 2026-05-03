@@ -71,8 +71,7 @@ def load_and_filter_data() -> pd.DataFrame:
 
     # Select relevant columns
     target_columns = [
-        'ANO-PERIODO', 'CENTRO DO CURSO', 'CAMPUS CENTRO DO CURSO',
-        'CENTRO DO CURSO SIGLA', 'CURSO', 'DOCENTE', 'COMPONENTE',
+        'ANO-PERIODO', 'CENTRO DO CURSO', 'CURSO', 'DOCENTE', 'COMPONENTE',
         ' COMENTARIO POSITIVO', ' COMENTARIO NEGATIVO', ' COMENTARIO GERAL'
     ]
     df_selected = selection.columns_filter(df_raw, target_columns)

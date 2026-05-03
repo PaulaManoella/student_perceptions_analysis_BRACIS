@@ -146,7 +146,7 @@ def run_pipeline() -> None:
             model_topics = utils.get_model_topics(lsa_model)
 
             df_lsa_topics = pd.DataFrame({'keywords': model_topics})
-            # df_lsa_topics.to_pickle('src/data/df_lsa_topics.pkl')
+            df_lsa_topics.to_pickle('src/data/df_lsa_topics.pkl')
             all_models_results['LSA'] = df_lsa_topics
 
             # Compute dominant topic per document for frequency analysis
@@ -164,7 +164,7 @@ def run_pipeline() -> None:
             model_topics = utils.get_model_topics(lda_model)
 
             df_lda_topics = pd.DataFrame({'keywords': model_topics})
-            # df_lda_topics.to_pickle('src/data/df_lda_topics.pkl')
+            df_lda_topics.to_pickle('src/data/df_lda_topics.pkl')
             all_models_results['LDA'] = df_lda_topics
 
             # Compute dominant topic per document for frequency analysis
@@ -187,7 +187,7 @@ def run_pipeline() -> None:
                 topic_words.append([feature_names[i] for i in top_indices])
 
             df_nmf_topics = pd.DataFrame({'keywords': topic_words})
-            # df_nmf_topics.to_pickle('src/data/df_nmf_topics.pkl')
+            df_nmf_topics.to_pickle('src/data/df_nmf_topics.pkl')
             all_models_results['NMF'] = df_nmf_topics
 
             # Compute dominant topic per document using the W (document-topic) matrix
@@ -236,7 +236,7 @@ def run_pipeline() -> None:
                 if len(t_words) >= 2:
                     words_list.append(t_words)
 
-            # df_bertopic_results.to_pickle('src/data/df_bertopikc_topics.pkl')
+            df_bertopic_results.to_pickle('src/data/df_bertopikc_topics.pkl')
             all_models_results['BERTopic'] = df_bertopic_results[['keywords']]
 
             # Use post-outlier-reduction topic assignments for frequency analysis
@@ -255,7 +255,7 @@ def run_pipeline() -> None:
     df_all_topics = pd.concat(all_models_results.values(), ignore_index=True)
 
     # Save as CSV (best for universal access without external Excel packages)
-    # df_all_topics.to_csv('output/topic_modeling/all_models_topics.csv', index=False, encoding='utf-8-sig')
+    df_all_topics.to_csv('output/topic_modeling/all_models_topics.csv', index=False, encoding='utf-8-sig')
 
     print("✅ Consolidated topics saved to all_models_topics.csv!\n")
 
