@@ -53,10 +53,10 @@ student_perceptions_analysis_BRACIS/
 │   ├── transformation.py             # BoW, TF-IDF, dictionary construction
 │   └── utils.py                       # Utility functions 
 ├── main.py                            # Main pipeline: preprocessing → topic modeling
-├── coherence_irbo_evaluation.py       # Coherence and IRBO evaluation across k topics
+├── coherence_irbo_evaluation.py       # Coherence and IRBO evaluation
 ├── inter-model_alignment.py           # Inter-model topic alignment
 ├── LLM_labeling.py                    # Automatic topic labeling with Llama 3.1
-├── pyproject.toml                     # Project dependencies (Poetry)
+├── pyproject.toml                     # Project dependencies
 ├── poetry.lock                        # Locked dependency versions
 └── README.md
 ```
