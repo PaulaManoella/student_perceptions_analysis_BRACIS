@@ -41,7 +41,7 @@ student_perceptions_analysis_BRACIS/
 │       ├── exclusive_topics.csv       # Model-exclusive topics identified
 │       └── super_topics.csv           # Common topics across models (communities)
 ├── src/
-│   ├── data/
+│   ├── data/                          # Serialized files (not tracked by git)
 │   │   ├── df_bertopic_topics.pkl     # Serialized BERTopic topic results
 │   │   ├── df_lda_topics.pkl          # Serialized LDA topic results
 │   │   ├── df_lsa_topics.pkl          # Serialized LSA topic results
